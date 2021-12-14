@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -85,9 +86,11 @@ type arguments struct {
 	verbose      bool
 	strictSyntax bool
 	workers      uint
-	limit        uint
+	limit        uint64
 
 	format string
+
+	countMode bool
 
 	exclude      string
 	progressMode string
@@ -137,7 +140,7 @@ Supported command-line flags:
 
 	flag.BoolVar(&args.verbose, "v", false,
 		`verbose mode: turn on additional debug logging`)
-	flag.UintVar(&args.limit, "limit", 1000,
+	flag.Uint64Var(&args.limit, "limit", 1000,
 		`stop after this many match results, 0 for unlimited`)
 	flag.UintVar(&args.workers, "workers", uint(runtime.NumCPU()),
 		`set the number of concurrent workers`)
@@ -153,6 +156,9 @@ Supported command-line flags:
 		`progress printing mode: "update", "append" or "none"`)
 	flag.StringVar(&args.format, "format", defaultFormat,
 		`specify an alternate format for the output, using the syntax Go templates`)
+
+	flag.BoolVar(&args.countMode, "c", false,
+		`count mode that discards all match data, but prints the total matches count`)
 
 	flag.BoolVar(&args.abs, "abs", false,
 		`print absolute filenames in the output`)
@@ -187,7 +193,7 @@ Supported command-line flags:
 type program struct {
 	args arguments
 
-	numMatches int64
+	numMatches uint64
 
 	exclude *regexp.Regexp
 
@@ -228,11 +234,17 @@ func (p *program) validateFlags() error {
 		return fmt.Errorf("progress: unexpected mode %q", p.args.progressMode)
 	}
 
-	// If there are more than 100k results, something is wrong.
-	// Most likely, a user pattern is too generic and needs adjustment.
-	const maxLimit = 100000
-	if p.args.limit == 0 || p.args.limit > maxLimit {
-		p.args.limit = maxLimit
+	if p.args.countMode {
+		if p.args.limit == 0 {
+			p.args.limit = math.MaxUint64
+		}
+	} else {
+		// If there are more than 100k results, something is wrong.
+		// Most likely, a user pattern is too generic and needs adjustment.
+		const maxLimit = 100000
+		if p.args.limit == 0 || p.args.limit > maxLimit {
+			p.args.limit = maxLimit
+		}
 	}
 
 	return nil
@@ -266,8 +278,9 @@ func (p *program) compilePattern() error {
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
 		p.workers[i] = &worker{
-			id: i,
-			m:  m.Clone(),
+			id:        i,
+			m:         m.Clone(),
+			countMode: p.args.countMode,
 		}
 	}
 
@@ -339,7 +352,7 @@ func (p *program) executePattern() error {
 					continue
 				}
 
-				atomic.AddInt64(&p.numMatches, int64(numMatches))
+				atomic.AddUint64(&p.numMatches, uint64(numMatches))
 			}
 		}(w)
 	}
@@ -361,8 +374,8 @@ func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker 
 			return err
 		}
 
-		numMatches := atomic.LoadInt64(&p.numMatches)
-		if numMatches > int64(p.args.limit) {
+		numMatches := atomic.LoadUint64(&p.numMatches)
+		if numMatches > uint64(p.args.limit) {
 			return io.EOF
 		}
 
@@ -412,7 +425,12 @@ func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker 
 }
 
 func (p *program) printMatches() error {
-	printed := uint(0)
+	if p.args.countMode {
+		log.Printf("found %d matches", p.numMatches)
+		return nil
+	}
+
+	printed := uint64(0)
 	for _, w := range p.workers {
 		for _, m := range w.matches {
 			if err := printMatch(p.outputTemplate, &p.args, m); err != nil {

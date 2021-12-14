@@ -13,6 +13,8 @@ import (
 type worker struct {
 	id int
 
+	countMode bool
+
 	m           *gogrep.Pattern
 	gogrepState gogrep.MatcherState
 	fset        *token.FileSet
@@ -56,6 +58,11 @@ func (w *worker) parseFile(fset *token.FileSet, filename string, data []byte) (*
 func (w *worker) Visit(n ast.Node) bool {
 	w.m.MatchNode(&w.gogrepState, n, func(data gogrep.MatchData) {
 		w.n++
+
+		if w.countMode {
+			return
+		}
+
 		start := w.fset.Position(data.Node.Pos())
 		end := w.fset.Position(data.Node.End())
 		m := match{
