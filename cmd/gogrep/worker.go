@@ -83,6 +83,9 @@ func (w *worker) initMatchText(m *match, startPos, endPos int) {
 		return b == '\n' || b == '\r'
 	}
 
+	// Try to expand the match pos range in a way that it includes the
+	// For example, if we have `if foo {` source line and `foo` matches,
+	// we would want to record the `if foo {` string as a matching line.
 	start := startPos
 	for start > 0 {
 		if isNewline(w.data[start]) {

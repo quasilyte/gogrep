@@ -320,6 +320,7 @@ func (p *program) executePattern() error {
 		ticker.Stop()
 		wg.Wait()
 		if p.args.progressMode == "update" {
+			// Clear the line so the progress text doesn't clutter the following output.
 			os.Stderr.WriteString("\r\033[K")
 		}
 		for _, w := range p.workers {
