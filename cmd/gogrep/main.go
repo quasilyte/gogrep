@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/quasilyte/gogrep"
+	"github.com/quasilyte/gogrep/filters"
 )
 
 // Following the grep tool convention.
@@ -57,6 +58,7 @@ func mainNoExit() (int, error) {
 	}{
 		{"validate flags", p.validateFlags},
 		{"start profiling", p.startProfiling},
+		{"compile filter", p.compileFilter},
 		{"compile pattern", p.compilePattern},
 		{"compile exclude pattern", p.compileExcludePattern},
 		{"compile output format", p.compileOutputFormat},
@@ -105,20 +107,26 @@ type arguments struct {
 
 	targets string
 	pattern string
+	filter  string
 }
 
 func parseFlags(args *arguments) {
 	flag.Usage = func() {
-		const usage = `Usage: gogrep [flags...] targets pattern
+		const usage = `Usage: gogrep [flags...] targets pattern [filter]
 Where:
   flags are command-line arguments that are listed in -help (see below)
   targets is a comma-separated list of file or directory names to search in
   pattern is a string that describes what is being matched
+  filter is Go expr string that can be used to reject certain matches
 Examples:
   # Find f calls with a single argument.
   gogrep file.php 'f($_)'
+  # Find any fmt.Println calls (any number of args).
+  gogrep file.php 'fmt.Println($*_)
   # Run gogrep on 2 folders (recursively).
   gogrep dir1,dir2 '"some string"'
+  # Run gogrep in src folder, ignoring all auto-generated files
+  gogrep src 'os.Exit($_)' '!file.IsAutogen()'
   # Ignore third_party folder while searching.
   gogrep --exclude '/third_party/' project/ 'pattern'
 
@@ -183,10 +191,14 @@ Supported command-line flags:
 	if len(argv) >= 2 {
 		args.pattern = argv[1]
 	}
+	if len(argv) >= 3 {
+		args.filter = argv[2]
+	}
 
 	if args.verbose {
 		log.Printf("debug: targets: %s", args.targets)
 		log.Printf("debug: pattern: %s", args.pattern)
+		log.Printf("debug: filter: %s", args.filter)
 	}
 }
 
@@ -196,6 +208,10 @@ type program struct {
 	numMatches uint64
 
 	exclude *regexp.Regexp
+
+	filterHints filterHints
+	filterInfo  filters.Info
+	filterExpr  *filters.Expr
 
 	workers []*worker
 
@@ -262,6 +278,34 @@ func (p *program) startProfiling() error {
 	return nil
 }
 
+func (p *program) compileFilter() error {
+	varOps := map[string]filters.Operation{
+		"IsPure":       opVarIsPure,
+		"IsConst":      opVarIsConst,
+		"IsStringLit":  opVarIsStringLit,
+		"IsRuneLit":    opVarIsRuneLit,
+		"IsIntLit":     opVarIsIntLit,
+		"IsFloatLit":   opVarIsFloatLit,
+		"IsComplexLit": opVarIsComplexLit,
+	}
+	optab := filters.NewOperationTable(varOps)
+	expr, info, err := filters.Parse(optab, p.args.filter)
+	if err != nil {
+		return err
+	}
+	for _, pred := range info.FilePredicates {
+		switch pred.Name {
+		case "IsAutogen":
+			p.filterHints.autogenCond = newBool3(!pred.Negated)
+		default:
+			return fmt.Errorf("unsupported file predicate: %s", pred.Name)
+		}
+	}
+	p.filterInfo = info
+	p.filterExpr = expr
+	return nil
+}
+
 func (p *program) compilePattern() error {
 	fset := token.NewFileSet()
 	config := gogrep.CompileConfig{
@@ -278,9 +322,12 @@ func (p *program) compilePattern() error {
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
 		p.workers[i] = &worker{
-			id:        i,
-			m:         m.Clone(),
-			countMode: p.args.countMode,
+			filterHints: p.filterHints,
+			filterInfo:  &p.filterInfo,
+			filterExpr:  p.filterExpr,
+			id:          i,
+			m:           m.Clone(),
+			countMode:   p.args.countMode,
 		}
 	}
 
