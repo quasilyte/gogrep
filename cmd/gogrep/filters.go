@@ -8,6 +8,7 @@ import (
 
 	"github.com/quasilyte/gogrep"
 	"github.com/quasilyte/gogrep/filters"
+	"github.com/quasilyte/perf-heatmap/heatmap"
 )
 
 type bool3 byte
@@ -44,32 +45,38 @@ const (
 	opVarIsIntLit
 	opVarIsFloatLit
 	opVarIsComplexLit
+	opVarIsHot
 )
 
-func applyFilter(f *filters.Expr, n ast.Node, m gogrep.MatchData) bool {
+type filterContext struct {
+	m gogrep.MatchData
+	w *worker
+}
+
+func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 	switch f.Op {
 	case filters.OpNot:
-		return !applyFilter(f.Args[0], n, m)
+		return !applyFilter(ctx, f.Args[0], n)
 
 	case filters.OpAnd:
-		return applyFilter(f.Args[0], n, m) && applyFilter(f.Args[1], n, m)
+		return applyFilter(ctx, f.Args[0], n) && applyFilter(ctx, f.Args[1], n)
 
 	case filters.OpOr:
-		return applyFilter(f.Args[0], n, m) || applyFilter(f.Args[1], n, m)
+		return applyFilter(ctx, f.Args[0], n) || applyFilter(ctx, f.Args[1], n)
 
 	case opVarIsStringLit:
-		return checkBasicLit(getMatchExpr(m, f.Str), token.STRING)
+		return checkBasicLit(getMatchExpr(ctx.m, f.Str), token.STRING)
 	case opVarIsRuneLit:
-		return checkBasicLit(getMatchExpr(m, f.Str), token.CHAR)
+		return checkBasicLit(getMatchExpr(ctx.m, f.Str), token.CHAR)
 	case opVarIsIntLit:
-		return checkBasicLit(getMatchExpr(m, f.Str), token.INT)
+		return checkBasicLit(getMatchExpr(ctx.m, f.Str), token.INT)
 	case opVarIsFloatLit:
-		return checkBasicLit(getMatchExpr(m, f.Str), token.FLOAT)
+		return checkBasicLit(getMatchExpr(ctx.m, f.Str), token.FLOAT)
 	case opVarIsComplexLit:
-		return checkBasicLit(getMatchExpr(m, f.Str), token.IMAG)
+		return checkBasicLit(getMatchExpr(ctx.m, f.Str), token.IMAG)
 
 	case opVarIsConst:
-		v, ok := m.CapturedByName(f.Str)
+		v, ok := ctx.m.CapturedByName(f.Str)
 		if !ok {
 			return false
 		}
@@ -79,7 +86,7 @@ func applyFilter(f *filters.Expr, n ast.Node, m gogrep.MatchData) bool {
 		return false
 
 	case opVarIsPure:
-		v, ok := m.CapturedByName(f.Str)
+		v, ok := ctx.m.CapturedByName(f.Str)
 		if !ok {
 			return false
 		}
@@ -88,8 +95,26 @@ func applyFilter(f *filters.Expr, n ast.Node, m gogrep.MatchData) bool {
 		}
 		return false
 
+	case opVarIsHot:
+		v, ok := ctx.m.CapturedByName(f.Str)
+		if !ok {
+			return false
+		}
+		lineFrom := ctx.w.fset.Position(v.Pos()).Line
+		lineTo := ctx.w.fset.Position(v.End()).Line
+		isHot := false
+		absFilename := filepathAbs(ctx.w.workDir, ctx.w.filename)
+		ctx.w.heatmap.QueryLineRange(absFilename, lineFrom, lineTo, func(level heatmap.HeatLevel) bool {
+			if level.Local != 0 || level.Global != 0 {
+				isHot = true
+				return false
+			}
+			return true
+		})
+		return isHot
+
 	default:
-		fmt.Fprintf(os.Stderr, "can't handle %v\n", f)
+		fmt.Fprintf(os.Stderr, "can't handle %s\n", filters.Sprint(ctx.w.filterInfo, f))
 	}
 
 	return true

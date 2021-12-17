@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,4 +16,14 @@ func envVarOrDefault(envKey, defaultValue string) string {
 		return v
 	}
 	return defaultValue
+}
+
+// filepathAbs is a faster and error-free version of filepath.Abs.
+// If workdir is already available, there is no need to do a os.Getwd for
+// every filepath.Abs call.
+func filepathAbs(wd, filename string) string {
+	if filepath.IsAbs(filename) {
+		return filename
+	}
+	return filepath.Join(wd, filename)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go/token"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"math"
@@ -20,8 +21,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/google/pprof/profile"
 	"github.com/quasilyte/gogrep"
 	"github.com/quasilyte/gogrep/filters"
+	"github.com/quasilyte/perf-heatmap/heatmap"
 )
 
 // Following the grep tool convention.
@@ -58,6 +61,7 @@ func mainNoExit() (int, error) {
 	}{
 		{"validate flags", p.validateFlags},
 		{"start profiling", p.startProfiling},
+		{"load heatmap", p.loadHeatmap},
 		{"compile filter", p.compileFilter},
 		{"compile pattern", p.compilePattern},
 		{"compile exclude pattern", p.compileExcludePattern},
@@ -104,6 +108,9 @@ type arguments struct {
 
 	cpuProfile string
 	memProfile string
+
+	heatmapFile      string
+	heatmapThreshold float64
 
 	targets string
 	pattern string
@@ -156,6 +163,7 @@ Supported command-line flags:
 		`write memory profile to the specified file`)
 	flag.StringVar(&args.cpuProfile, "cpuprofile", "",
 		`write CPU profile to the specified file`)
+
 	flag.BoolVar(&args.strictSyntax, "strict-syntax", false,
 		`disable syntax normalizations, so 10 and 0xA are not considered to be identical, and so on`)
 	flag.StringVar(&args.exclude, "exclude", "",
@@ -164,6 +172,11 @@ Supported command-line flags:
 		`progress printing mode: "update", "append" or "none"`)
 	flag.StringVar(&args.format, "format", defaultFormat,
 		`specify an alternate format for the output, using the syntax Go templates`)
+
+	flag.StringVar(&args.heatmapFile, "heatmap", "",
+		`a CPU profile that will be used to build a heatmap, needed for IsHot() filters`)
+	flag.Float64Var(&args.heatmapThreshold, "heatmap-threshold", 0.5,
+		`a threshold argument used to create a heatmap, see perf-heatmap docs on it`)
 
 	flag.BoolVar(&args.countMode, "c", false,
 		`count mode that discards all match data, but prints the total matches count`)
@@ -208,6 +221,8 @@ type program struct {
 	numMatches uint64
 
 	exclude *regexp.Regexp
+
+	heatmap *heatmap.Index
 
 	filterHints filterHints
 	filterInfo  filters.Info
@@ -278,6 +293,32 @@ func (p *program) startProfiling() error {
 	return nil
 }
 
+func (p *program) loadHeatmap() error {
+	if p.args.heatmapFile == "" {
+		return nil
+	}
+
+	data, err := os.ReadFile(p.args.heatmapFile)
+	if err != nil {
+		return err
+	}
+	pprofProfile, err := profile.Parse(bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	config := heatmap.IndexConfig{
+		Threshold: p.args.heatmapThreshold,
+	}
+	index := heatmap.NewIndex(config)
+	if err := index.AddProfile(pprofProfile); err != nil {
+		return err
+	}
+
+	p.heatmap = index
+
+	return nil
+}
+
 func (p *program) compileFilter() error {
 	varOps := map[string]filters.Operation{
 		"IsPure":       opVarIsPure,
@@ -287,6 +328,7 @@ func (p *program) compileFilter() error {
 		"IsIntLit":     opVarIsIntLit,
 		"IsFloatLit":   opVarIsFloatLit,
 		"IsComplexLit": opVarIsComplexLit,
+		"IsHot":        opVarIsHot,
 	}
 	optab := filters.NewOperationTable(varOps)
 	expr, info, err := filters.Parse(optab, p.args.filter)
@@ -319,9 +361,16 @@ func (p *program) compilePattern() error {
 		return err
 	}
 
+	workDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
 		p.workers[i] = &worker{
+			workDir:     workDir,
+			heatmap:     p.heatmap,
 			filterHints: p.filterHints,
 			filterInfo:  &p.filterInfo,
 			filterExpr:  p.filterExpr,
@@ -416,8 +465,9 @@ func (p *program) executePattern() error {
 }
 
 func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker *time.Ticker) error {
+	// TODO: skip some dirs like node_modules, .git and so on?
 	filesProcessed := 0
-	err := filepath.Walk(target, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(target, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

@@ -10,12 +10,16 @@ import (
 
 	"github.com/quasilyte/gogrep"
 	"github.com/quasilyte/gogrep/filters"
+	"github.com/quasilyte/perf-heatmap/heatmap"
 )
 
 type worker struct {
 	id int
 
 	countMode bool
+
+	workDir string
+	heatmap *heatmap.Index
 
 	filterHints filterHints
 	filterInfo  *filters.Info
@@ -77,7 +81,8 @@ func (w *worker) parseFile(fset *token.FileSet, filename string, data []byte) (*
 
 func (w *worker) Visit(n ast.Node) bool {
 	w.m.MatchNode(&w.gogrepState, n, func(data gogrep.MatchData) {
-		accept := w.filterExpr.Op == filters.OpNop || applyFilter(w.filterExpr, data.Node, data)
+		accept := w.filterExpr.Op == filters.OpNop ||
+			applyFilter(filterContext{w: w, m: data}, w.filterExpr, data.Node)
 		if !accept {
 			return
 		}
