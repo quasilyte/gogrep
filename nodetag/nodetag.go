@@ -1,6 +1,8 @@
 package nodetag
 
-import "go/ast"
+import (
+	"go/ast"
+)
 
 type Value int
 

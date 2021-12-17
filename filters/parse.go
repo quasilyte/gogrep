@@ -42,8 +42,8 @@ func (p *filterParser) Parse(s string) (*Expr, Info, error) {
 		return nil, Info{}, err
 	}
 
-	p.varnameToID = map[string]int32{}
-	p.functionFilterSet = map[SpecialPredicate]struct{}{}
+	p.varnameToID = make(map[string]int32)
+	p.functionFilterSet = make(map[SpecialPredicate]struct{})
 
 	p.info.OpTab = p.tab
 
@@ -193,26 +193,6 @@ func (p *filterParser) convertBinaryExpr(root *ast.BinaryExpr) (*Expr, error) {
 	}
 
 	return p.convertBinaryExprXY(root.Op, root.X, root.Y)
-}
-
-func (p *filterParser) invertOp(op token.Token) token.Token {
-	switch op {
-	case token.EQL:
-		return token.NEQ
-	case token.NEQ:
-		return token.EQL
-	case token.LSS:
-		return token.GEQ
-	case token.GTR:
-		return token.LEQ
-	case token.LEQ:
-		return token.GTR
-	case token.GEQ:
-		return token.LSS
-
-	default:
-		return token.ILLEGAL
-	}
 }
 
 func (p *filterParser) convertBinaryExprXY(op token.Token, x, y ast.Expr) (*Expr, error) {

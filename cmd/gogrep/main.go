@@ -7,7 +7,6 @@ import (
 	"go/token"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -473,7 +472,7 @@ func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker 
 		}
 
 		numMatches := atomic.LoadUint64(&p.numMatches)
-		if numMatches > uint64(p.args.limit) {
+		if numMatches > p.args.limit {
 			return io.EOF
 		}
 
@@ -548,7 +547,7 @@ func (p *program) printMatches() error {
 func (p *program) finishProfiling() error {
 	if p.args.cpuProfile != "" {
 		pprof.StopCPUProfile()
-		err := ioutil.WriteFile(p.args.cpuProfile, p.cpuProfile.Bytes(), 0666)
+		err := os.WriteFile(p.args.cpuProfile, p.cpuProfile.Bytes(), 0o600)
 		if err != nil {
 			return fmt.Errorf("write CPU profile: %v", err)
 		}

@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/quasilyte/gogrep"
@@ -39,7 +39,7 @@ type worker struct {
 }
 
 func (w *worker) grepFile(filename string) (int, error) {
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return 0, fmt.Errorf("read file: %v", err)
 	}

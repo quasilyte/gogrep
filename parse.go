@@ -296,8 +296,9 @@ func tokenize(src []byte) ([]fullToken, error) {
 		}
 		toks = append(toks, wt)
 		if caseStat == caseHere {
-			toks = append(toks, fullToken{wt.pos, token.COLON, ""})
-			toks = append(toks, fullToken{wt.pos, token.IDENT, "gogrep_body"})
+			toks = append(toks,
+				fullToken{wt.pos, token.COLON, ""},
+				fullToken{wt.pos, token.IDENT, "gogrep_body"})
 		}
 	}
 	return toks, err
@@ -341,7 +342,7 @@ func encodeWildName(name string, any bool) string {
 func decodeWildName(s string) varInfo {
 	s = s[len(wildSeparator):]
 	nameEnd := strings.Index(s, wildSeparator)
-	name := s[:nameEnd]
+	name := s[:nameEnd+0]
 	s = s[nameEnd:]
 	s = s[len(wildSeparator):]
 	kind := s

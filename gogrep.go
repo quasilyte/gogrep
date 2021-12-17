@@ -109,6 +109,6 @@ func Compile(config CompileConfig) (*Pattern, PatternInfo, error) {
 
 func newPatternInfo() PatternInfo {
 	return PatternInfo{
-		Vars: map[string]struct{}{},
+		Vars: make(map[string]struct{}),
 	}
 }
