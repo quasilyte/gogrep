@@ -1,9 +1,9 @@
 ![logo](https://github.com/quasilyte/vscode-gogrep/blob/master/docs/logo.png?raw=true)
 
-![Build Status](https://github.com/quasilyte/perf-heatmap/workflows/Go/badge.svg)
-[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/quasilyte/perf-heatmap/heatmap)](https://pkg.go.dev/github.com/quasilyte/perf-heatmap/heatmap)
-[![Go Report Card](https://goreportcard.com/badge/github.com/quasilyte/go-ruleguard)](https://goreportcard.com/report/github.com/quasilyte/go-ruleguard)
-![Code Coverage](https://codecov.io/gh/quasilyte/perf-heatmap/branch/master/graph/badge.svg)
+![Build Status](https://github.com/quasilyte/gogrep/workflows/Go/badge.svg)
+[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/quasilyte/gogrep)](https://pkg.go.dev/github.com/quasilyte/gogrep)
+[![Go Report Card](https://goreportcard.com/badge/github.com/quasilyte/gogrep)](https://goreportcard.com/report/github.com/quasilyte/gogrep)
+![Code Coverage](https://codecov.io/gh/quasilyte/gogrep/branch/master/graph/badge.svg)
 
 # gogrep
 
