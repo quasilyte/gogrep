@@ -156,11 +156,12 @@ func (c *compiler) compileOptFieldList(n *ast.FieldList) {
 			// `func (...) $*result` - result could be anything
 			// `func (...) $result`  - result is a field list of 1 element
 			info := decodeWildName(ident.Name)
-			if info.Seq {
+			switch {
+			case info.Seq:
 				c.compileWildIdent(ident, true)
-			} else if info.Name == "_" {
+			case info.Name == "_":
 				c.emitInstOp(opFieldNode)
-			} else {
+			default:
 				c.emitInst(instruction{
 					op:         opNamedFieldNode,
 					valueIndex: c.internVar(n, info.Name),

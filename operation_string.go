@@ -2,7 +2,9 @@
 
 package gogrep
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.

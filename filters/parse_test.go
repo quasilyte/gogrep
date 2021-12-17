@@ -131,7 +131,8 @@ func TestParse(t *testing.T) {
 				t.Fatalf("compile %q: %v", test.input, err)
 			}
 			if test.info != info.String() {
-				t.Fatalf("info mismatch for %q:\nhave: %s\nwant: %s", test.input, info, test.info)
+				t.Fatalf("info mismatch for %q:\nhave: %s\nwant: %s",
+					test.input, info.String(), test.info)
 			}
 			have := Sprint(&info, compiled)
 			if test.expr != have {

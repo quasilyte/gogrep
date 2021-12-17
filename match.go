@@ -61,8 +61,7 @@ func (m *matcher) MatchNode(state *MatcherState, n ast.Node, accept func(MatchDa
 			m.walkExprSlice(state, n.Results, accept)
 		}
 	case opMultiDecl:
-		switch n := n.(type) {
-		case *ast.File:
+		if n, ok := n.(*ast.File); ok {
 			m.walkDeclSlice(state, n.Decls, accept)
 		}
 	default:
@@ -609,7 +608,7 @@ func (m *matcher) matchSpecSlice(state *MatcherState, specs []ast.Spec) bool {
 
 // matchNodeList matches two lists of nodes. It uses a common algorithm to match
 // wildcard patterns with any number of nodes without recursion.
-func (m *matcher) matchNodeList(state *MatcherState, nodes NodeSlice, partial bool) (ast.Node, int) {
+func (m *matcher) matchNodeList(state *MatcherState, nodes NodeSlice, partial bool) (matched ast.Node, offset int) {
 	sliceLen := nodes.Len()
 	inst := m.nextInst(state)
 	if inst.op == opEnd {
@@ -656,7 +655,7 @@ func (m *matcher) matchNodeList(state *MatcherState, nodes NodeSlice, partial bo
 		stack = stack[:len(stack)-1]
 		pcNext = 0
 		jNext = 0
-		if len(stack) > 0 {
+		if len(stack) != 0 {
 			pcNext = stack[len(stack)-1].pc
 			jNext = stack[len(stack)-1].j
 		}

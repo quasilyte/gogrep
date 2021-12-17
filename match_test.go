@@ -513,8 +513,8 @@ func TestMatch(t *testing.T) {
 		{`switch $*x {}`, 1, `switch {}`},
 		{`switch $*_; b {}`, 1, `switch b := f(); b {}`},
 		{`switch $*_; b {}`, 0, `switch b := f(); c {}`},
-		//{`switch $*x {}`, 1, `switch a(); b {}`},
-		//{`switch $*x {}; switch $*x {}`, 1, `{ switch a(); b {}; switch a(); b {} }`},
+		// TODO {`switch $*x {}`, 1, `switch a(); b {}`},
+		// TODO {`switch $*x {}; switch $*x {}`, 1, `{ switch a(); b {}; switch a(); b {} }`},
 		{`switch $*x {}; switch $*x {}`, 0, `{ switch a(); b {}; switch b {} }`},
 		{`switch a(); $*_ {}`, 0, `for b {}`},
 

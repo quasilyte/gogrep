@@ -20,7 +20,7 @@ type Info struct {
 	OpTab *OperationsTable
 }
 
-func (info Info) String() string {
+func (info *Info) String() string {
 	var parts []string
 	for _, f := range info.FilePredicates {
 		negate := ""
