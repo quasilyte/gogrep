@@ -219,6 +219,7 @@ type program struct {
 
 	numMatches uint64
 
+	workDir string
 	exclude *regexp.Regexp
 
 	heatmap *heatmap.Index
@@ -364,6 +365,7 @@ func (p *program) compilePattern() error {
 	if err != nil {
 		return err
 	}
+	p.workDir = workDir
 
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
@@ -477,10 +479,7 @@ func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker 
 		}
 
 		if p.exclude != nil {
-			fullName, err := filepath.Abs(path)
-			if err != nil {
-				log.Printf("error: abs(%s): %v", path, err)
-			}
+			fullName := filepathAbs(p.workDir, path)
 			skip := p.exclude.MatchString(fullName)
 			if skip && info.IsDir() {
 				return filepath.SkipDir
@@ -530,7 +529,7 @@ func (p *program) printMatches() error {
 	printed := uint64(0)
 	for _, w := range p.workers {
 		for _, m := range w.matches {
-			if err := printMatch(p.outputTemplate, &p.args, m); err != nil {
+			if err := printMatch(p.outputTemplate, p.workDir, &p.args, m); err != nil {
 				return err
 			}
 			printed++
@@ -568,8 +567,9 @@ func (p *program) finishProfiling() error {
 	return nil
 }
 
-func printMatch(tmpl *template.Template, args *arguments, m match) error {
+func printMatch(tmpl *template.Template, wd string, args *arguments, m match) error {
 	s, err := renderTemplate(m, renderConfig{
+		wd:          wd,
 		tmpl:        tmpl,
 		colors:      !args.noColor,
 		multiline:   args.multiline,
@@ -584,6 +584,7 @@ func printMatch(tmpl *template.Template, args *arguments, m match) error {
 }
 
 type renderConfig struct {
+	wd          string
 	tmpl        *template.Template
 	colors      bool
 	multiline   bool
@@ -595,11 +596,7 @@ func renderTemplate(m match, config renderConfig) (string, error) {
 	matchText := m.text[m.matchStartOffset : m.matchStartOffset+m.matchLength]
 	filename := m.filename
 	if config.absFilename {
-		abs, err := filepath.Abs(filename)
-		if err != nil {
-			return "", fmt.Errorf("abs(%q): %v", m.filename, err)
-		}
-		filename = abs
+		filename = filepathAbs(config.wd, filename)
 	}
 
 	data := make(map[string]interface{}, 4)
