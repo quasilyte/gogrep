@@ -222,7 +222,8 @@ type program struct {
 	workDir string
 	exclude *regexp.Regexp
 
-	heatmap *heatmap.Index
+	heatmap            *heatmap.Index
+	heatmapFilenameSet map[string]struct{}
 
 	filterHints filterHints
 	filterInfo  filters.Info
@@ -345,6 +346,29 @@ func (p *program) compileFilter() error {
 	}
 	p.filterInfo = info
 	p.filterExpr = expr
+
+	heatmapBound := false
+	filters.Walk(expr, func(e *filters.Expr) bool {
+		if e.Op == filters.OpOr {
+			return false
+		}
+		if e.Op == opVarIsHot {
+			heatmapBound = true
+			return false
+		}
+		return true
+	})
+	if heatmapBound {
+		if p.heatmap == nil {
+			return fmt.Errorf("specified filters require a --heatmap")
+		}
+		filenameSet := make(map[string]struct{})
+		for _, filename := range p.heatmap.CollectFilenames() {
+			filenameSet[filepath.Base(filename)] = struct{}{}
+		}
+		p.heatmapFilenameSet = filenameSet
+	}
+
 	return nil
 }
 
@@ -370,14 +394,15 @@ func (p *program) compilePattern() error {
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
 		p.workers[i] = &worker{
-			workDir:     workDir,
-			heatmap:     p.heatmap,
-			filterHints: p.filterHints,
-			filterInfo:  &p.filterInfo,
-			filterExpr:  p.filterExpr,
-			id:          i,
-			m:           m.Clone(),
-			countMode:   p.args.countMode,
+			workDir:            workDir,
+			heatmap:            p.heatmap,
+			heatmapFilenameSet: p.heatmapFilenameSet,
+			filterHints:        p.filterHints,
+			filterInfo:         &p.filterInfo,
+			filterExpr:         p.filterExpr,
+			id:                 i,
+			m:                  m.Clone(),
+			countMode:          p.args.countMode,
 		}
 	}
 

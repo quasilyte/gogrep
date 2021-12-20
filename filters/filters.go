@@ -91,6 +91,17 @@ func Sprint(info *Info, e *Expr) string {
 	return "(" + opString + " " + strings.Join(parts, " ") + ")"
 }
 
+func Walk(e *Expr, callback func(e *Expr) bool) {
+	if !callback(e) {
+		return
+	}
+	for _, arg := range e.Args {
+		if !callback(arg) {
+			return
+		}
+	}
+}
+
 //go:generate stringer -type=Operation -trimprefix=Op
 type Operation uint32
 
