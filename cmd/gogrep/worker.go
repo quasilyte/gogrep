@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/quasilyte/gogrep"
@@ -18,8 +19,9 @@ type worker struct {
 
 	countMode bool
 
-	workDir string
-	heatmap *heatmap.Index
+	workDir            string
+	heatmapFilenameSet map[string]struct{}
+	heatmap            *heatmap.Index
 
 	filterHints filterHints
 	filterInfo  *filters.Info
@@ -33,12 +35,26 @@ type worker struct {
 
 	errors []string
 
-	data     []byte
-	filename string
-	n        int
+	data      []byte
+	filename  string
+	pkgName   string
+	typeName  string
+	funcName  string
+	closureID int
+
+	n int
 }
 
 func (w *worker) grepFile(filename string) (int, error) {
+	// When doing a heatmap-based filtering, we can skip files
+	// that are 100% outside of the heatmap.
+	// heatmapFilenameSet is non nil if we should do this optimization.
+	if w.heatmapFilenameSet != nil {
+		if _, ok := w.heatmapFilenameSet[filepath.Base(filename)]; !ok {
+			return 0, nil
+		}
+	}
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return 0, fmt.Errorf("read file: %v", err)
@@ -58,8 +74,16 @@ func (w *worker) grepFile(filename string) (int, error) {
 
 	w.data = data
 	w.filename = filename
+	w.pkgName = root.Name.Name
+
 	w.n = 0
-	ast.Inspect(root, w.Visit)
+
+	walker := astWalker{
+		worker: w,
+		visit:  w.Visit,
+	}
+	walker.walk(root)
+
 	return w.n, nil
 }
 
@@ -79,7 +103,7 @@ func (w *worker) parseFile(fset *token.FileSet, filename string, data []byte) (*
 	return f, nil
 }
 
-func (w *worker) Visit(n ast.Node) bool {
+func (w *worker) Visit(n ast.Node) {
 	w.m.MatchNode(&w.gogrepState, n, func(data gogrep.MatchData) {
 		accept := w.filterExpr.Op == filters.OpNop ||
 			applyFilter(filterContext{w: w, m: data}, w.filterExpr, data.Node)
@@ -104,8 +128,6 @@ func (w *worker) Visit(n ast.Node) bool {
 		w.initMatchText(&m, start.Offset, end.Offset)
 		w.matches = append(w.matches, m)
 	})
-
-	return true
 }
 
 func (w *worker) initMatchText(m *match, startPos, endPos int) {

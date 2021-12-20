@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"go/token"
 	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/quasilyte/gogrep"
 	"github.com/quasilyte/gogrep/filters"
@@ -103,8 +105,16 @@ func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 		lineFrom := ctx.w.fset.Position(v.Pos()).Line
 		lineTo := ctx.w.fset.Position(v.End()).Line
 		isHot := false
-		absFilename := filepathAbs(ctx.w.workDir, ctx.w.filename)
-		ctx.w.heatmap.QueryLineRange(absFilename, lineFrom, lineTo, func(level heatmap.HeatLevel) bool {
+		key := heatmap.Key{
+			TypeName: ctx.w.typeName,
+			FuncName: ctx.w.funcName,
+			Filename: filepath.Base(ctx.w.filename),
+			PkgName:  ctx.w.pkgName,
+		}
+		if ctx.w.closureID != 0 {
+			key.FuncName = key.FuncName + ".func" + strconv.Itoa(ctx.w.closureID)
+		}
+		ctx.w.heatmap.QueryLineRange(key, lineFrom, lineTo, func(line int, level heatmap.HeatLevel) bool {
 			if level.Local != 0 || level.Global != 0 {
 				isHot = true
 				return false

@@ -13,6 +13,8 @@ github.com/google/pprof v0.0.0-20211214055906-6f57359322fd/go.mod h1:KgnwoLYCZ8I
 github.com/ianlancetaylor/demangle v0.0.0-20210905161508-09a460cdf81d/go.mod h1:aYm2/VgdVmcIU8iMfdMvDMsRAQjcfZSKFby6HOFvi/w=
 github.com/quasilyte/perf-heatmap v0.0.0-20211216213439-781362d4c24e h1:M0YcmkdxI8vBTHHCiSDX7aoj40EenFXYIMR+mjcWbAw=
 github.com/quasilyte/perf-heatmap v0.0.0-20211216213439-781362d4c24e/go.mod h1:mPJZP5qrgK90IzVVdmPOOJhTXyy65WoldUR1QPeh6AU=
+github.com/quasilyte/perf-heatmap v0.0.0-20211220115704-5477e07beb6c h1:oXNR67+f1LvhpeV+Mn4HqJwra5zy1Wq3MrtE+xhCuvI=
+github.com/quasilyte/perf-heatmap v0.0.0-20211220115704-5477e07beb6c/go.mod h1:mPJZP5qrgK90IzVVdmPOOJhTXyy65WoldUR1QPeh6AU=
 golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
