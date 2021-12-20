@@ -1,10 +1,22 @@
 package main
 
 import (
+	"go/ast"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/quasilyte/gogrep"
+	"github.com/quasilyte/gogrep/filters"
 )
+
+func capturedByName(m gogrep.MatchData, name string) (ast.Node, bool) {
+	if filters.IsRootVarname(name) {
+		return m.Node, true
+	}
+	n, ok := m.CapturedByName(name)
+	return n, ok
+}
 
 func isGoFilename(filename string) bool {
 	return strings.HasSuffix(filename, ".go") ||

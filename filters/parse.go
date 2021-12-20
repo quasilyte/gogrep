@@ -9,9 +9,11 @@ import (
 )
 
 const mangledPatternVar = "__vAR_"
+const dollardollarVar = "_Dollar2_"
 
 func preprocess(s string) string {
 	s = strings.TrimSpace(s)
+	s = strings.ReplaceAll(s, "$$", mangledPatternVar+dollardollarVar)
 	return strings.ReplaceAll(s, "$", mangledPatternVar)
 }
 

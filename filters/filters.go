@@ -20,6 +20,10 @@ type Info struct {
 	OpTab *OperationsTable
 }
 
+func IsRootVarname(varname string) bool {
+	return varname == dollardollarVar
+}
+
 func (info *Info) String() string {
 	var parts []string
 	for _, f := range info.FilePredicates {
