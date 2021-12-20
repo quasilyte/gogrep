@@ -98,7 +98,7 @@ func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 		return false
 
 	case opVarIsHot:
-		v, ok := ctx.m.CapturedByName(f.Str)
+		v, ok := capturedByName(ctx.m, f.Str)
 		if !ok {
 			return false
 		}

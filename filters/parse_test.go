@@ -111,6 +111,12 @@ func TestParse(t *testing.T) {
 			expr:  `(And (%IsConst "x") (Not (%IsConst "y")))`,
 			info:  `!file.IsTest() $x $y`,
 		},
+
+		{
+			input: `$$.IsPure()`,
+			expr:  `(%IsPure "_Dollar2_")`,
+			info:  `$_Dollar2_`,
+		},
 	}
 
 	const (
