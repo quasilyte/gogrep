@@ -330,6 +330,7 @@ func (p *program) compileFilter() error {
 		"IsFloatLit":   opVarIsFloatLit,
 		"IsComplexLit": opVarIsComplexLit,
 		"IsHot":        opVarIsHot,
+		"Text":         opVarText,
 	}
 	optab := filters.NewOperationTable(varOps)
 	expr, info, err := filters.Parse(optab, p.args.filter)

@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strconv"
 	"strings"
 )
 
@@ -98,8 +99,20 @@ func (p *filterParser) convertExpr(root ast.Expr) (*Expr, error) {
 		return p.convertExpr(root.X)
 	case *ast.CallExpr:
 		return p.convertCallExpr(root)
+	case *ast.BasicLit:
+		return p.convertBasicLit(root)
 	default:
 		return nil, fmt.Errorf("convert expr: unsupported %T", root)
+	}
+}
+
+func (p *filterParser) convertBasicLit(root *ast.BasicLit) (*Expr, error) {
+	switch root.Kind {
+	case token.STRING:
+		val, err := strconv.Unquote(root.Value)
+		return &Expr{Op: OpString, Str: val}, err
+	default:
+		return nil, fmt.Errorf("convert basic lit: unsupported %s", root.Kind)
 	}
 }
 
@@ -198,8 +211,7 @@ func (p *filterParser) convertBinaryExpr(root *ast.BinaryExpr) (*Expr, error) {
 }
 
 func (p *filterParser) convertBinaryExprXY(op token.Token, x, y ast.Expr) (*Expr, error) {
-	switch op {
-	case token.LOR:
+	if op == token.LOR {
 		insideOr := p.insideOr
 		p.insideOr = true
 		lhs, err := p.convertExpr(x)
@@ -212,17 +224,25 @@ func (p *filterParser) convertBinaryExprXY(op token.Token, x, y ast.Expr) (*Expr
 		}
 		p.insideOr = insideOr
 		return &Expr{Op: OpOr, Args: []*Expr{lhs, rhs}}, nil
+	}
 
+	lhs, err := p.convertExpr(x)
+	if err != nil {
+		return nil, err
+	}
+	rhs, err := p.convertExpr(y)
+	if err != nil {
+		return nil, err
+	}
+
+	switch op {
 	case token.LAND:
-		lhs, err := p.convertExpr(x)
-		if err != nil {
-			return nil, err
-		}
-		rhs, err := p.convertExpr(y)
-		if err != nil {
-			return nil, err
-		}
 		return &Expr{Op: OpAnd, Args: []*Expr{lhs, rhs}}, nil
+
+	case token.EQL:
+		return &Expr{Op: OpEq, Args: []*Expr{lhs, rhs}}, nil
+	case token.NEQ:
+		return &Expr{Op: OpNotEq, Args: []*Expr{lhs, rhs}}, nil
 	}
 
 	return nil, fmt.Errorf("convert binary expr: unsupported %s", op)

@@ -117,15 +117,38 @@ func TestParse(t *testing.T) {
 			expr:  `(%IsPure "_Dollar2_")`,
 			info:  `$_Dollar2_`,
 		},
+
+		{
+			input: `$x.Text() == "String"`,
+			expr:  `(Eq (%Text "x") (String "String"))`,
+			info:  `$x`,
+		},
+		{
+			input: `"String" == $x.Text()`,
+			expr:  `(Eq (%Text "x") (String "String"))`,
+			info:  `$x`,
+		},
+		{
+			input: `$x.Text() != "String"`,
+			expr:  `(NotEq (%Text "x") (String "String"))`,
+			info:  `$x`,
+		},
+		{
+			input: `"String" != $x.Text()`,
+			expr:  `(NotEq (%Text "x") (String "String"))`,
+			info:  `$x`,
+		},
 	}
 
 	const (
 		opVarIsConst = iota + 1
 		opVarIsPure
+		opVarText
 	)
 	varOps := map[string]Operation{
 		"IsConst": opVarIsConst,
 		"IsPure":  opVarIsPure,
+		"Text":    opVarText,
 	}
 	optab := NewOperationTable(varOps)
 

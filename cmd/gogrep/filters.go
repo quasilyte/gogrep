@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strconv"
 
@@ -47,12 +46,21 @@ const (
 	opVarIsIntLit
 	opVarIsFloatLit
 	opVarIsComplexLit
+	opVarText
 	opVarIsHot
 )
 
 type filterContext struct {
 	m gogrep.MatchData
 	w *worker
+}
+
+func (ctx *filterContext) NodeText(varname string) []byte {
+	n, ok := capturedByName(ctx.m, varname)
+	if !ok {
+		return nil
+	}
+	return ctx.w.nodeText(n)
 }
 
 func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
@@ -123,11 +131,25 @@ func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 		})
 		return isHot
 
-	default:
-		fmt.Fprintf(os.Stderr, "can't handle %s\n", filters.Sprint(ctx.w.filterInfo, f))
-	}
+	case filters.OpEq:
+		return applyEqFilter(ctx, f, n)
+	case filters.OpNotEq:
+		return !applyEqFilter(ctx, f, n)
 
-	return true
+	default:
+		panic(fmt.Sprintf("can't handle %s\n", filters.Sprint(ctx.w.filterInfo, f)))
+	}
+}
+
+func applyEqFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
+	x := f.Args[0]
+	y := f.Args[1]
+	if x.Op == opVarText {
+		if y.Op == filters.OpString {
+			return string(ctx.NodeText(x.Str)) == y.Str
+		}
+	}
+	panic(fmt.Sprintf("can't handle %s\n", filters.Sprint(ctx.w.filterInfo, f)))
 }
 
 func isPureExpr(expr ast.Expr) bool {

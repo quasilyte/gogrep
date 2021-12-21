@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"os"
 	"path/filepath"
@@ -159,6 +161,31 @@ func (w *worker) initMatchText(m *match, startPos, endPos int) {
 	m.text = string(w.data[start:end])
 	m.matchStartOffset = startPos - start
 	m.matchLength = endPos - startPos
+}
+
+func (w *worker) nodeText(n ast.Node) []byte {
+	if gogrep.IsEmptyNodeSlice(n) {
+		return nil
+	}
+
+	from := w.fset.Position(n.Pos()).Offset
+	to := w.fset.Position(n.End()).Offset
+	src := w.data
+	if (from >= 0 && from < len(src)) && (to >= 0 && to < len(src)) {
+		return src[from:to]
+	}
+
+	// Go printer would panic on comments.
+	if n, ok := n.(*ast.Comment); ok {
+		return []byte(n.Text)
+	}
+
+	// Fallback to the printer.
+	var buf bytes.Buffer
+	if err := printer.Fprint(&buf, w.fset, n); err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
 }
 
 func isAutogenFile(f *ast.File) bool {
