@@ -123,7 +123,7 @@ func applyFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 			key.FuncName = key.FuncName + ".func" + strconv.Itoa(ctx.w.closureID)
 		}
 		ctx.w.heatmap.QueryLineRange(key, lineFrom, lineTo, func(line int, level heatmap.HeatLevel) bool {
-			if level.Local != 0 || level.Global != 0 {
+			if level.Global != 0 {
 				isHot = true
 				return false
 			}
