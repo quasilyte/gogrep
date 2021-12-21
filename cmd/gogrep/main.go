@@ -133,8 +133,8 @@ Examples:
   gogrep dir1,dir2 '"some string"'
   # Run gogrep in src folder, ignoring all auto-generated files
   gogrep src 'os.Exit($_)' '!file.IsAutogen()'
-  # Ignore third_party folder while searching.
-  gogrep --exclude '/third_party/' project/ 'pattern'
+  # Ignore third_party and vendor folders while searching.
+  gogrep --exclude '/third_party$|/vendor$' project/ 'pattern'
 
 The output colors can be configured with "--color-<name>" flags.
 Use --no-color to disable the output coloring.
@@ -165,7 +165,7 @@ Supported command-line flags:
 
 	flag.BoolVar(&args.strictSyntax, "strict-syntax", false,
 		`disable syntax normalizations, so 10 and 0xA are not considered to be identical, and so on`)
-	flag.StringVar(&args.exclude, "exclude", "",
+	flag.StringVar(&args.exclude, "exclude", `/node_modules$|/testdata$|/\.\w+$`,
 		`exclude files or directories by regexp pattern`)
 	flag.StringVar(&args.progressMode, "progress", "update",
 		`progress printing mode: "update", "append" or "none"`)
@@ -491,7 +491,6 @@ func (p *program) executePattern() error {
 }
 
 func (p *program) walkTarget(target string, filenameQueue chan<- string, ticker *time.Ticker) error {
-	// TODO: skip some dirs like node_modules, .git and so on?
 	filesProcessed := 0
 	err := filepath.WalkDir(target, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
