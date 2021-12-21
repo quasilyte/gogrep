@@ -119,6 +119,9 @@ const (
 	// OpNop = do nothing (should be optimized-away, unless it's a top level op)
 	OpNop Operation = math.MaxUint32 - iota
 
+	// OpString is a string literal that holds the value inside $Str.
+	OpString
+
 	// OpNot = !$Args[0]
 	OpNot
 
@@ -127,6 +130,12 @@ const (
 
 	// OpOr = $Args[0] || $Args[1]
 	OpOr
+
+	// OpEq = $Args[0] == $Args[1]
+	OpEq
+
+	// OpNotEq = $Args[0] != $Args[1]
+	OpNotEq
 
 	// OpFunctionVarFunc = function.$Str()
 	OpFunctionVarFunc
