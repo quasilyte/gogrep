@@ -1,6 +1,6 @@
 module github.com/quasilyte/gogrep
 
-go 1.17
+go 1.16
 
 require (
 	github.com/go-toolsmith/astequal v1.0.1

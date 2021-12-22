@@ -17,6 +17,39 @@ type compileTest struct {
 	output []string
 }
 
+func runCompileTest(t *testing.T, i int, test compileTest, withTypes bool) {
+	t.Helper()
+	t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+		isStrict := func(s string) bool {
+			return strings.HasPrefix(s, "STRICT ")
+		}
+		unwrapPattern := func(s string) string {
+			s = strings.TrimPrefix(s, "STRICT ")
+			return s
+		}
+
+		strict := isStrict(test.input)
+		input := unwrapPattern(test.input)
+		want := test.output
+		fset := token.NewFileSet()
+		config := CompileConfig{Fset: fset, Src: input, Strict: strict, WithTypes: withTypes}
+		p, _, err := Compile(config)
+		if err != nil {
+			t.Errorf("compile `%s`: %v", input, err)
+			return
+		}
+		have := formatProgram(p.m.prog)
+		if diff := cmp.Diff(have, want); diff != "" {
+			t.Errorf("compile `%s` (+want -have):\n%s", input, diff)
+			fmt.Printf("Output:\n")
+			for _, line := range have {
+				fmt.Printf("`%s`,\n", line)
+			}
+			return
+		}
+	})
+}
+
 func compileTestsFromMap(m map[string][]string) []compileTest {
 	result := make([]compileTest, 0, len(m))
 	for input, output := range m {
@@ -370,27 +403,25 @@ func TestCompileWildcard(t *testing.T) {
 	})
 
 	for i := range tests {
-		test := tests[i]
-		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
-			input := test.input
-			want := test.output
-			fset := token.NewFileSet()
-			config := CompileConfig{Fset: fset, Src: input}
-			p, _, err := Compile(config)
-			if err != nil {
-				t.Errorf("compile `%s`: %v", input, err)
-				return
-			}
-			have := formatProgram(p.m.prog)
-			if diff := cmp.Diff(have, want); diff != "" {
-				t.Errorf("compile `%s` (+want -have):\n%s", input, diff)
-				fmt.Printf("Output:\n")
-				for _, line := range have {
-					fmt.Printf("`%s`,\n", line)
-				}
-				return
-			}
-		})
+		runCompileTest(t, i, tests[i], false)
+	}
+}
+
+func TestCompileWildcardWithTypes(t *testing.T) {
+	tests := compileTestsFromMap(map[string][]string{
+		`fmt.$_($*_)`: {
+			`CallExpr`,
+			` • SelectorExpr`,
+			` •  • Node`,
+			` •  • Ident fmt`,
+			` • ArgList`,
+			` •  • NodeSeq`,
+			` •  • End`,
+		},
+	})
+
+	for i := range tests {
+		runCompileTest(t, i, tests[i], true)
 	}
 }
 
@@ -765,9 +796,17 @@ func TestCompile(t *testing.T) {
 		`goto l`:      {`SimpleLabeledBranchStmt goto l`},
 
 		`foo: x`: {
-			`SimpleLabeledStmt foo`,
-			` • ExprStmt`,
-			` •  • Ident x`,
+			`KeyValueExpr`,
+			` • Ident foo`,
+			` • Ident x`,
+		},
+
+		`{foo: x}`: {
+			`BlockStmt`,
+			` • SimpleLabeledStmt foo`,
+			` •  • ExprStmt`,
+			` •  •  • Ident x`,
+			` • End`,
 		},
 
 		`x = y`: {
@@ -1010,31 +1049,7 @@ func TestCompile(t *testing.T) {
 	})
 
 	for i := range tests {
-		test := tests[i]
-		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
-			input := test.input
-			want := test.output
-			fset := token.NewFileSet()
-			n := testParseNode(t, fset, input)
-			var c compiler
-			c.config = CompileConfig{Fset: fset, WithTypes: true}
-			info := newPatternInfo()
-			p, err := c.Compile(n, &info)
-			if err != nil {
-				t.Errorf("compile `%s`: %v", input, err)
-				return
-			}
-
-			have := formatProgram(p)
-			if diff := cmp.Diff(have, want); diff != "" {
-				t.Errorf("compile `%s` (+want -have):\n%s", input, diff)
-				fmt.Printf("Output:\n")
-				for _, line := range have {
-					fmt.Printf("`%s`,\n", line)
-				}
-				return
-			}
-		})
+		runCompileTest(t, i, tests[i], true)
 	}
 }
 

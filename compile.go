@@ -496,7 +496,7 @@ func (c *compiler) compileCallExpr(n *ast.CallExpr) {
 func (c *compiler) compileSymbol(fn ast.Expr) {
 	if c.config.WithTypes {
 		if e, ok := fn.(*ast.SelectorExpr); ok {
-			if ident, ok := e.X.(*ast.Ident); ok && stdinfo.Packages[ident.Name] != "" {
+			if ident, ok := e.X.(*ast.Ident); ok && stdinfo.Packages[ident.Name] != "" && !isWildName(e.Sel.Name) {
 				c.emitInst(instruction{
 					op:         opSimpleSelectorExpr,
 					valueIndex: c.internString(e.Sel, e.Sel.String()),
