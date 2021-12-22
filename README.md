@@ -9,6 +9,13 @@
 
 WIP: this is an attempt to move modified [gogrep](https://github.com/mvdan/gogrep) from the [go-ruleguard](https://github.com/quasilyte/go-ruleguard) project, so it can be used outside of the ruleguard as a library.
 
+## Used by
+
+gogrep as a library is used by:
+
+* [go-ruleguard](https://github.com/quasilyte/go-ruleguard)
+* [gocorpus](https://github.com/quasilyte/gocorpus)
+
 ## Acknowledgements
 
 The original gogrep is written by the [Daniel Martí](https://github.com/mvdan).
