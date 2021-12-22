@@ -1,6 +1,6 @@
 module github.com/quasilyte/gogrep/cmd/gogrep
 
-go 1.17
+go 1.16
 
 require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd

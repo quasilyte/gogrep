@@ -3,12 +3,78 @@ package gogrep
 import (
 	"fmt"
 	"go/ast"
+	"go/importer"
+	"go/parser"
 	"go/token"
+	"go/types"
 	"strings"
 	"testing"
 )
 
 // FIXME: find test case duplicates.
+
+func TestMatchWithTypes(t *testing.T) {
+	tests := []struct {
+		pat        string
+		numMatches int
+	}{
+		{`fmt.Sprintf($*_)`, 2},
+		{`fmt.$_($*_)`, 2},
+	}
+
+	fileSrc := `package example
+
+import (
+	"fmt"
+)
+
+func testFunc(format string, args []interface{}) {
+	_ = fmt.Sprintf("%d", 1)
+	_ = fmt.Sprintf(format, args...)
+}
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "file.go", fileSrc, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	typesInfo := &types.Info{
+		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
+		Uses:  make(map[*ast.Ident]types.Object),
+	}
+	typechecker := &types.Config{
+		Importer: importer.Default(),
+	}
+	_, err = typechecker.Check("example", fset, []*ast.File{f}, typesInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+			state := NewMatcherState()
+			state.Types = typesInfo
+			fset := token.NewFileSet()
+			testPattern := test.pat
+			config := CompileConfig{Fset: fset, Src: testPattern, WithTypes: true}
+			pat, _, err := Compile(config)
+			if err != nil {
+				t.Errorf("compile `%s`: %v", test.pat, err)
+				return
+			}
+			matches := 0
+			testAllMatches(pat, &state, f, func(m MatchData) {
+				matches++
+			})
+			if matches != test.numMatches {
+				t.Errorf("test `%s`:\nhave: %v\nwant: %v",
+					test.pat, matches, test.numMatches)
+			}
+		})
+	}
+}
 
 func TestMatch(t *testing.T) {
 	strict := func(s string) string {
@@ -147,6 +213,7 @@ func TestMatch(t *testing.T) {
 		{`fmt.Sprintf($_, $args...)`, 0, `fmt.Sprintf(f)`},
 		{`fmt.Sprintf($_, $args...)`, 0, `fmt.Sprintf(f, a, b)`},
 		{`fmt.Sprintf($_, $args)`, 0, `fmt.Sprintf(f, a...)`},
+		{`$fmt.$_($*_)`, 1, `fmt.Sprintf("%d", 1)`},
 
 		// Selector expr.
 		{`$x.Field`, 1, `a.Field`},
