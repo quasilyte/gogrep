@@ -140,6 +140,13 @@ func TestMatch(t *testing.T) {
 		{`f($*_, $_)`, 0, `f(1, 2, xs...)`},
 		{`f($*_, xs)`, 0, `f(1, 2, xs...)`},
 		{`f($*_, xs...)`, 1, `f(1, 2, xs...)`},
+		{`fmt.Sprintf($_, $_...)`, 1, `fmt.Sprintf(format, args...)`},
+		{`fmt.Sprintf($_, $args...)`, 1, `fmt.Sprintf(format, args...)`},
+		{`fmt.Sprintf($_, $args...)`, 1, `fmt.Sprintf(f, a...)`},
+		{`fmt.Sprintf($_, $args...)`, 0, `fmt.Sprintf(f, a)`},
+		{`fmt.Sprintf($_, $args...)`, 0, `fmt.Sprintf(f)`},
+		{`fmt.Sprintf($_, $args...)`, 0, `fmt.Sprintf(f, a, b)`},
+		{`fmt.Sprintf($_, $args)`, 0, `fmt.Sprintf(f, a...)`},
 
 		// Selector expr.
 		{`$x.Field`, 1, `a.Field`},
