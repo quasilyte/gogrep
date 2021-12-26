@@ -176,8 +176,24 @@ target.go:2: println(
 
 ### `-no-calor` argument
 
+`gogrep` inserts ANSI color escapes by the default.
+
+You can disable this behavior with the `--no-color` flag. 
+
 ### `-color-filename` argument
+
+Specify color scheme for {{.Filename}} format variable. By default, `dark-magenta` color used.
+
+NOTE: this argument also can be specified by GOGREP_COLOR_FILENAME environment variable.
 
 ### `-color-line` argument
 
+Specify color scheme for {{.Line}} format variable. By default, `dark-green` color used.
+
+NOTE: this argument also can be specified by GOGREP_COLOR_LINE environment variable.
+
 ### `-color-match` argument
+
+Specify color scheme for {{.Match}} format variable. By default, `dark-red` color used.
+
+NOTE: this argument also can be specified by GOGREP_COLOR_MATCH environment variable.
