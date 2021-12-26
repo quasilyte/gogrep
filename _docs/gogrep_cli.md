@@ -123,19 +123,19 @@ You can disable this behavior with the `-no-color` flag.
 
 ### `-color-filename` argument
 
-Specify color scheme for {{.Filename}} format variable. By default, `dark-magenta` color used.
+Specify color scheme for `{{.Filename}}` format variable. By default, `dark-magenta` color used.
 
 > This argument also can be specified by `GOGREP_COLOR_FILENAME` environment variable.
 
 ### `-color-line` argument
 
-Specify color scheme for {{.Line}} format variable. By default, `dark-green` color used.
+Specify color scheme for `{{.Line}}` format variable. By default, `dark-green` color used.
 
 > This argument also can be specified by `GOGREP_COLOR_LINE` environment variable.
 
 ### `-color-match` argument
 
-Specify color scheme for {{.Match}} format variable. By default, `dark-red` color used.
+Specify color scheme for `{{.Match}}` format variable. By default, `dark-red` color used.
 
 > This argument also can be specified by `GOGREP_COLOR_MATCH` environment variable.
 
