@@ -47,7 +47,13 @@ Set the number of concurrent workers. By default, equal to number of logical CPU
 
 ### `-memprofile` argument
 
+Write memory profile to the specified file. By default, memory profile is not collected.
+
+NOTE: Collect GC usage and current runtime heap profile.
+
 ### `-cpuprofile` argument
+
+Write cpu profile to the specified file. By default, cpu profile is not collected.
 
 ### `-strict-syntax` argument
 
@@ -125,7 +131,11 @@ Several template variables are available:
 
 ### `-heatmap` argument
 
+A CPU profile that will be used to build a heatmap, needed for `IsHot()` filters. By default, heatmap profile is not collected.
+
 ### `-heatmap-threshold` argument
+
+A threshold argument used to create a heatmap, see perf-heatmap [docs](https://github.com/quasilyte/perf-heatmap) on it. By default value equal to `0.5`.
 
 ### Count mode, `-c` argument
 
