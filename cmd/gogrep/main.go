@@ -126,9 +126,9 @@ Where:
   filter is Go expr string that can be used to reject certain matches
 Examples:
   # Find f calls with a single argument.
-  gogrep file.php 'f($_)'
+  gogrep file.go 'f($_)'
   # Find any fmt.Println calls (any number of args).
-  gogrep file.php 'fmt.Println($*_)
+  gogrep file.go 'fmt.Println($*_)
   # Run gogrep on 2 folders (recursively).
   gogrep dir1,dir2 '"some string"'
   # Run gogrep in src folder, ignoring all auto-generated files

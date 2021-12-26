@@ -35,9 +35,9 @@ By default, `gogrep` stops when it finds 1000 matches.
 This is due to the fact that it's easy to write a too generic pattern and get overwhelming results on the big code
 bases.
 
-To increase this limit, specify the `--limit` argument with some big value you're comfortable with.
+To increase this limit, specify the `-limit` argument with some big value you're comfortable with.
 
-If you want to set it to the max value, use `--limit 0`.
+If you want to set it to the max value, use `-limit 0`.
 
 NOTE: Max limit for not `count mode` 100k results and for `count mode` it limited by max uint64 value.
 
@@ -61,17 +61,17 @@ When strict is false, gogrep may consider 0xA and 10 to be identical. By default
 
 ### `-exclude` argument
 
-If you want to ignore some directories or files, use `--exclude` argument. Argument accepts a regexp argument.
+If you want to ignore some directories or files, use `-exclude` argument. Argument accepts a regexp argument.
 
 Here is an example that ignores everything under the `node_modules` folder:
 
 ```bash
-$ gogrep --exclude '/node_modules$' . '<pattern>'
+$ gogrep -exclude '/node_modules$' . '<pattern>'
 ```
 
 ### `-progress` argument
 
-In order to work faster, `gogrep` doesn't print any search results until it finds them all (or reaches the `--limit`).
+In order to work faster, `gogrep` doesn't print any search results until it finds them all (or reaches the `-limit`).
 
 If you're searching through a big (several millions SLOC) project, it could take a few seconds to complete. As it might
 look like the program hangs, `gogrep` prints its progress in this manner:
@@ -88,7 +88,7 @@ Where `N` and `M` are variables that will change over time.
 * `append` is a simplest mode that just writes one log message after another
 * `update` is a more user-friendly mode that will use `\r` to update the message (default)
 
-To override the default mode, use `--progress` argument.
+To override the default mode, use `-progress` argument.
 
 > Note: logs are written to the `stderr` while matches are written to the `stdout`.
 
@@ -110,10 +110,10 @@ target.go:3:     panic("unimplemented") // Should never happen
 ```
 
 As you see, it prints the whole line and the match location, not just the match. If we want `gogrep` to output only the
-matched part, we can use the `--format` flag.
+matched part, we can use the `-format` flag.
 
 ```bash
-$ gogrep --format '{{.Match}}' target.go 'panic($_)'
+$ gogrep -format '{{.Match}}' target.go 'panic($_)'
 panic("unimplemented")
 ```
 
@@ -147,13 +147,13 @@ By default, `gogrep` prints the relative filenames in the output.
 
 Technically speaking, it sets `{{.Filename}}` variable to the relative file name.
 
-To get an absolute path there, use `--abs` argument.
+To get an absolute path there, use `-abs` argument.
 
 ```bash
 $ gogrep target.go 'append($_, $_)'
 target.go:3:     append($data, $elem)
 
-$ gogrep --abs target.go 'append($_, $_)'
+$ gogrep -abs target.go 'append($_, $_)'
 /home/quasilyte/target.go:3:     append($data, $elem)
 ```
 
@@ -163,13 +163,13 @@ Some patterns may match a code that spans across the multiple lines.
 
 By default, `gogrep` replaces all newlines with `\n` sequence, so you can treat all matches as strings without newlines.
 
-If you want to avoid that behavior, `--m` argument can be used.
+If you want to avoid that behavior, `-m` argument can be used.
 
 ```go
 // target.go
 println(
-1,
-2,
+    1,
+    2,
 )
 ```
 
@@ -177,7 +177,7 @@ println(
 $ gogrep target.go 'println(${"*"})'
 target.go:2: println(\n    1,\n    2\n)
 
-$ gogrep --m target.go 'println(${"*"})'
+$ gogrep -m target.go 'println(${"*"})'
 target.go:2: println(
     1,
     2,
@@ -188,22 +188,22 @@ target.go:2: println(
 
 `gogrep` inserts ANSI color escapes by the default.
 
-You can disable this behavior with the `--no-color` flag. 
+You can disable this behavior with the `-no-color` flag. 
 
 ### `-color-filename` argument
 
 Specify color scheme for {{.Filename}} format variable. By default, `dark-magenta` color used.
 
-NOTE: this argument also can be specified by GOGREP_COLOR_FILENAME environment variable.
+NOTE: this argument also can be specified by `GOGREP_COLOR_FILENAME` environment variable.
 
 ### `-color-line` argument
 
 Specify color scheme for {{.Line}} format variable. By default, `dark-green` color used.
 
-NOTE: this argument also can be specified by GOGREP_COLOR_LINE environment variable.
+NOTE: this argument also can be specified by `GOGREP_COLOR_LINE` environment variable.
 
 ### `-color-match` argument
 
 Specify color scheme for {{.Match}} format variable. By default, `dark-red` color used.
 
-NOTE: this argument also can be specified by GOGREP_COLOR_MATCH environment variable.
+NOTE: this argument also can be specified by `GOGREP_COLOR_MATCH` environment variable.
