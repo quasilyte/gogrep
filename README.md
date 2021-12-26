@@ -7,9 +7,7 @@
 
 # gogrep
 
-WIP: this is an attempt to move modified [gogrep](https://github.com/mvdan/gogrep) from
-the [go-ruleguard](https://github.com/quasilyte/go-ruleguard) project, so it can be used outside of the ruleguard as a
-library.
+WIP: this is an attempt to move modified [gogrep](https://github.com/mvdan/gogrep) from the [go-ruleguard](https://github.com/quasilyte/go-ruleguard) project, so it can be used outside of the ruleguard as a library.
 
 ## Used by
 

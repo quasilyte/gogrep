@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd
-	github.com/quasilyte/gogrep v0.0.0-20211222160056-7ecbf85177e3
+	github.com/quasilyte/gogrep v0.0.0-20211222142514-47561ea9892a
 	github.com/quasilyte/perf-heatmap v0.0.0-20211220153856-7361377975b8
 )
 
