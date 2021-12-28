@@ -651,6 +651,18 @@ func TestMatch(t *testing.T) {
 		{`for init; cond; post {}`, 1, `for init; cond; post {}`},
 		{`for init; cond; post {}`, 0, `for init; ; post {}`},
 		{`for init; cond; post {}`, 0, `for _; cond; post {}`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { var re = regexp.MustCompile("\\d+") }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { f(); var re = regexp.MustCompile("\\d+") }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { var re = regexp.MustCompile("\\d+"); f() }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { var (re = regexp.MustCompile("\\d+")) }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { f(); var isNumberRE = regexp.MustCompile("\\d+"); f() }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { f(); var isNumberRE = regexp.MustCompile("\\d+"); f(); g() }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 1, `for { f(); g(); var isNumberRE = regexp.MustCompile("\\d+"); f() }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 0, `for { var re, err = regexp.Compile("\\d+") }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 0, `for {}`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 0, `for { regexp.MustCompile(pattern) }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 0, `for { re := regexp.MustCompile(pattern) }`},
+		{`for { $*_; var $_ = regexp.MustCompile($s); $*_ }`, 0, `for { re = regexp.MustCompile(pattern) }`},
 
 		// For stmt - optional matching.
 		{`for $*_; $*_; $*_ {}`, 1, `for {}`},
@@ -943,6 +955,22 @@ func TestMatch(t *testing.T) {
 		{`type $_ struct{$*_; Foo; $*_}`, 1, `type foo struct{x int; Foo; y int}`},
 		{`type $_ struct{$*_; Foo; $*_}`, 0, `type foo struct{*Foo}`},
 		{`type $_ struct{$*_; Foo; $*_}`, 0, `type foo struct{x int}`},
+
+		// Decl stmt.
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ type x int }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ f(); type x int }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ type x int; f() }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ f(); type x int; f() }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ f(); g(); type x int; f() }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ f(); g(); type (x int); f() }`},
+		{`{ $*_; type $_ int; $*_ }`, 1, `{ type x int; type y int }`},
+		{`{ $*_; type $_ int; $*_ }`, 0, `{ type (y string; x int) }`},
+		{`{ $*_; type $_ int; $*_ }`, 0, `{ type x string }`},
+		{`{ $*_; type $_ int; $*_ }`, 0, `{ var x string }`},
+		{`{ $*_; var $_ int; $*_ }`, 1, `{ var x int }`},
+		{`{ $*_; var $_ int; $*_ }`, 0, `{ type x int }`},
+		{`{ $*_; const $_ = $_; $*_ }`, 1, `{ const x = 0 }`},
+		{`{ $*_; const $_ = $_; $*_ }`, 0, `{ var x = 0 }`},
 
 		// Value specs.
 		{`$_ int`, 1, `var a int`},

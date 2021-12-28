@@ -750,9 +750,12 @@ func (c *compiler) compileAssignStmt(n *ast.AssignStmt) {
 
 func (c *compiler) compileBlockStmt(n *ast.BlockStmt) {
 	c.emitInstOp(opBlockStmt)
+	insideStmtList := c.insideStmtList
+	c.insideStmtList = true
 	for _, elt := range n.List {
 		c.compileStmt(elt)
 	}
+	c.insideStmtList = insideStmtList
 	c.emitInstOp(opEnd)
 }
 
