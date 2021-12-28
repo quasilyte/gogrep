@@ -971,6 +971,14 @@ func TestMatch(t *testing.T) {
 		{`{ $*_; var $_ int; $*_ }`, 0, `{ type x int }`},
 		{`{ $*_; const $_ = $_; $*_ }`, 1, `{ const x = 0 }`},
 		{`{ $*_; const $_ = $_; $*_ }`, 0, `{ var x = 0 }`},
+		{`if $_ { $*_; var $_ int; $*_ }`, 1, `if cond { var x int }`},
+		{`if $_ { $*_; var $_ int; $*_ }`, 0, `if cond { type x int }`},
+		{`if $_ { $*_; const $_ = $_; $*_ }`, 1, `if cond { const x = 0 }`},
+		{`if $_ { $*_; const $_ = $_; $*_ }`, 0, `if cond { var x = 0 }`},
+		{`if $_ { $*_; var $_ int; $*_ }`, 0, `{ var x int }`},
+		{`if $_ { $*_; var $_ int; $*_ }`, 0, `{ type x int }`},
+		{`if $_ { $*_; const $_ = $_; $*_ }`, 0, `{ const x = 0 }`},
+		{`if $_ { $*_; const $_ = $_; $*_ }`, 0, `{ var x = 0 }`},
 
 		// Value specs.
 		{`$_ int`, 1, `var a int`},
