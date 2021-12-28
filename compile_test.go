@@ -336,6 +336,20 @@ func TestCompileWildcard(t *testing.T) {
 			` •  • Node`,
 		},
 
+		`for { var $_ = $_ }`: {
+			`ForStmt`,
+			` • BlockStmt`,
+			` •  • DeclStmt`,
+			` •  •  • VarDecl`,
+			` •  •  •  • ValueInitSpec`,
+			` •  •  •  •  • Node`,
+			` •  •  •  •  • End`,
+			` •  •  •  •  • Node`,
+			` •  •  •  •  • End`,
+			` •  •  •  • End`,
+			` •  • End`,
+		},
+
 		`var x int; if true { f() }`: {
 			`MultiStmt`,
 			` • DeclStmt`,
