@@ -21,6 +21,9 @@ type worker struct {
 
 	countMode bool
 
+	needCapture   bool
+	needMatchLine bool
+
 	workDir            string
 	heatmapFilenameSet map[string]struct{}
 	heatmap            *heatmap.Index
@@ -122,17 +125,40 @@ func (w *worker) Visit(n ast.Node) {
 		start := w.fset.Position(data.Node.Pos())
 		end := w.fset.Position(data.Node.End())
 		m := match{
-			filename: w.filename,
-			line:     start.Line,
-			startPos: start.Offset,
-			endPos:   end.Offset,
+			filename:    w.filename,
+			line:        start.Line,
+			startOffset: start.Offset,
+			endOffset:   end.Offset,
+		}
+		if w.needCapture {
+			w.initMatchCapture(&m, data.Capture)
 		}
 		w.initMatchText(&m, start.Offset, end.Offset)
 		w.matches = append(w.matches, m)
 	})
 }
 
+func (w *worker) initMatchCapture(m *match, capture []gogrep.CapturedNode) {
+	m.capture = make([]capturedNode, len(capture))
+	for i, c := range capture {
+		startOffset := w.fset.Position(c.Node.Pos()).Offset
+		endOffset := w.fset.Position(c.Node.End()).Offset
+		m.capture[i] = capturedNode{
+			startOffset: startOffset,
+			endOffset:   endOffset,
+			data:        c,
+		}
+	}
+}
+
 func (w *worker) initMatchText(m *match, startPos, endPos int) {
+	if !w.needMatchLine {
+		m.text = string(w.data[startPos:endPos])
+		m.matchStartOffset = 0
+		m.matchLength = len(m.text)
+		return
+	}
+
 	isNewline := func(b byte) bool {
 		return b == '\n' || b == '\r'
 	}
@@ -157,7 +183,6 @@ func (w *worker) initMatchText(m *match, startPos, endPos int) {
 		}
 		end++
 	}
-
 	m.text = string(w.data[start:end])
 	m.matchStartOffset = startPos - start
 	m.matchLength = endPos - startPos

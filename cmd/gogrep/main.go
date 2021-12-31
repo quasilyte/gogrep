@@ -392,9 +392,18 @@ func (p *program) compilePattern() error {
 	}
 	p.workDir = workDir
 
+	deps := inspectFormatDeps(p.args.format)
+	needCapture := deps.capture
+	needMatchLine := deps.matchLine
+	fmt.Println("need capture?", needCapture)
+
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
 		p.workers[i] = &worker{
+			needCapture:   needCapture,
+			needMatchLine: needMatchLine,
+			countMode:     p.args.countMode,
+
 			workDir:            workDir,
 			heatmap:            p.heatmap,
 			heatmapFilenameSet: p.heatmapFilenameSet,
@@ -403,7 +412,6 @@ func (p *program) compilePattern() error {
 			filterExpr:         p.filterExpr,
 			id:                 i,
 			m:                  m.Clone(),
-			countMode:          p.args.countMode,
 		}
 	}
 
@@ -625,6 +633,19 @@ func renderTemplate(m match, config renderConfig) (string, error) {
 	}
 
 	data := make(map[string]interface{}, 4)
+
+	// If we captured anything, add submatches as map elements.
+	if len(m.capture) != 0 {
+		for _, c := range m.capture {
+			// Since we don't have file contents at this point, we can't
+			// do a simple contents[StartPos:EndPos].
+			// But we do know that all submatches located somewhere inside m.text.
+			width := c.endOffset - c.startOffset
+			begin := c.startOffset - m.startOffset
+			end := begin + width
+			data[c.data.Name] = m.text[begin:end]
+		}
+	}
 
 	// Assign these after the captures so they overwrite them in case of collisions.
 	data["Filename"] = filename
