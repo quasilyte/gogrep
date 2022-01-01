@@ -283,6 +283,10 @@ func (p *program) validateFlags() error {
 }
 
 func (p *program) startProfiling() error {
+	if p.args.memProfile != "" {
+		runtime.MemProfileRate = 1024
+	}
+
 	if p.args.cpuProfile == "" {
 		return nil
 	}
