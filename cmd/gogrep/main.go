@@ -395,7 +395,6 @@ func (p *program) compilePattern() error {
 	deps := inspectFormatDeps(p.args.format)
 	needCapture := deps.capture
 	needMatchLine := deps.matchLine
-	fmt.Println("need capture?", needCapture)
 
 	p.workers = make([]*worker, p.args.workers)
 	for i := range p.workers {
