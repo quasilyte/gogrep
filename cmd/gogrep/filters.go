@@ -36,6 +36,7 @@ func (b bool3) Eq(v bool) bool {
 
 type filterHints struct {
 	autogenCond bool3
+	testCond    bool3
 }
 
 const (
