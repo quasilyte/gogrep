@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"strings"
 
 	"github.com/quasilyte/gogrep/nodetag"
 )
@@ -92,6 +93,9 @@ type CompileConfig struct {
 }
 
 func Compile(config CompileConfig) (*Pattern, PatternInfo, error) {
+	if strings.HasPrefix(config.Src, "import") {
+		return compileImportPattern(config)
+	}
 	info := newPatternInfo()
 	n, err := parseExpr(config.Fset, config.Src)
 	if err != nil {

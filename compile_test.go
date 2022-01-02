@@ -414,6 +414,16 @@ func TestCompileWildcard(t *testing.T) {
 			` •  • End`,
 			` • End`,
 		},
+
+		`import $_`: {
+			`AnyImportDecl`,
+		},
+
+		`import $imports`: {
+			`ImportDecl`,
+			` • NamedNodeSeq imports`,
+			` • End`,
+		},
 	})
 
 	for i := range tests {

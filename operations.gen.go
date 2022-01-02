@@ -537,9 +537,16 @@ const (
 	// Args: typespecs...
 	opTypeDecl operation = 116
 
+	// Tag: GenDecl
+	opAnyImportDecl operation = 117
+
+	// Tag: GenDecl
+	// Args: importspecs...
+	opImportDecl operation = 118
+
 	// Tag: File
 	// Args: name
-	opEmptyPackage operation = 117
+	opEmptyPackage operation = 119
 )
 
 type operationInfo struct {
@@ -1475,6 +1482,22 @@ var operationInfoTable = [256]operationInfo{
 		SliceIndex:     -1,
 	},
 	opTypeDecl: {
+		Tag:            nodetag.GenDecl,
+		NumArgs:        1,
+		ValueKind:      emptyValue,
+		ExtraValueKind: emptyValue,
+		VariadicMap:    1, // 1
+		SliceIndex:     -1,
+	},
+	opAnyImportDecl: {
+		Tag:            nodetag.GenDecl,
+		NumArgs:        0,
+		ValueKind:      emptyValue,
+		ExtraValueKind: emptyValue,
+		VariadicMap:    0, // 0
+		SliceIndex:     -1,
+	},
+	opImportDecl: {
 		Tag:            nodetag.GenDecl,
 		NumArgs:        1,
 		ValueKind:      emptyValue,
