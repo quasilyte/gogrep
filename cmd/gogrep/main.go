@@ -345,6 +345,8 @@ func (p *program) compileFilter() error {
 		switch pred.Name {
 		case "IsAutogen":
 			p.filterHints.autogenCond = newBool3(!pred.Negated)
+		case "IsTest":
+			p.filterHints.testCond = newBool3(!pred.Negated)
 		default:
 			return fmt.Errorf("unsupported file predicate: %s", pred.Name)
 		}
@@ -396,7 +398,10 @@ func (p *program) compilePattern() error {
 	}
 	p.workDir = workDir
 
-	deps := inspectFormatDeps(p.args.format)
+	deps, err := inspectFormatDeps(p.args.format)
+	if err != nil {
+		return err
+	}
 	needCapture := deps.capture
 	needMatchLine := deps.matchLine
 
@@ -435,8 +440,12 @@ func (p *program) compileExcludePattern() error {
 
 func (p *program) compileOutputFormat() error {
 	format := p.args.format
+	tmpl := template.New("output-format")
+	if format != defaultFormat {
+		tmpl.Funcs(outputFormatTemplateFuncs())
+	}
 	var err error
-	p.outputTemplate, err = template.New("output-format").Parse(format)
+	p.outputTemplate, err = tmpl.Parse(format)
 	if err != nil {
 		return err
 	}

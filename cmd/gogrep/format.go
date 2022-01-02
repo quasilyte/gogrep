@@ -1,6 +1,9 @@
 package main
 
 import (
+	"errors"
+	"strings"
+	"text/template"
 	"text/template/parse"
 )
 
@@ -9,16 +12,24 @@ type formatDeps struct {
 	matchLine bool
 }
 
-func inspectFormatDeps(format string) formatDeps {
+func outputFormatTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"replace": func(s, from, to string) string {
+			return strings.ReplaceAll(s, from, to)
+		},
+	}
+}
+
+func inspectFormatDeps(format string) (formatDeps, error) {
 	var deps formatDeps
 
-	treeMap, err := parse.Parse("output-format", format, "", "", nil)
+	treeMap, err := parse.Parse("output-format", format, "", "", outputFormatTemplateFuncs())
 	if err != nil {
-		return deps
+		return deps, err
 	}
 	tree, ok := treeMap["output-format"]
 	if !ok {
-		return deps
+		return deps, errors.New("can't find output-format template")
 	}
 
 	walkTemplate(tree.Root, func(n parse.Node) bool {
@@ -43,7 +54,7 @@ func inspectFormatDeps(format string) formatDeps {
 		return true
 	})
 
-	return deps
+	return deps, nil
 }
 
 func walkTemplate(n parse.Node, visit func(parse.Node) bool) {

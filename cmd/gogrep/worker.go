@@ -60,6 +60,13 @@ func (w *worker) grepFile(filename string) (int, error) {
 		}
 	}
 
+	if w.filterHints.testCond != bool3unset {
+		isTest := strings.HasSuffix(filename, "_test.go")
+		if !w.filterHints.testCond.Eq(isTest) {
+			return 0, nil
+		}
+	}
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return 0, fmt.Errorf("read file: %v", err)
