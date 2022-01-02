@@ -13,6 +13,48 @@ import (
 
 // FIXME: find test case duplicates.
 
+func TestMatchCapture(t *testing.T) {
+	tests := []struct {
+		pat     string
+		input   string
+		capture string
+	}{
+		{`import $i`, `package p; import "fmt"`, `i:"fmt"`},
+		{`import $i`, `package p; import ("fmt")`, `i:"fmt"`},
+		{`import $i`, `package p; import ("fmt"; "strings")`, `i:"fmt"; "strings"`},
+		{`import $imports`, `package p; import ("fmt"; "strings")`, `imports:"fmt"; "strings"`},
+		{`import $imports`, `package p; import (crand "crypto/rand"; "strings")`, `imports:crand "crypto/rand"; "strings"`},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+			state := NewMatcherState()
+			config := CompileConfig{Fset: token.NewFileSet(), Src: test.pat}
+			pat, _, err := Compile(config)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fset := token.NewFileSet()
+			target := testParseNode(t, fset, test.input)
+			var capture []string
+			testAllMatches(pat, &state, target, func(m MatchData) {
+				for _, c := range m.Capture {
+					from := fset.Position(c.Node.Pos()).Offset
+					to := fset.Position(c.Node.End()).Offset
+					capture = append(capture, c.Name+":"+test.input[from:to])
+				}
+			})
+			have := strings.Join(capture, ", ")
+			want := test.capture
+			if have != want {
+				t.Fatalf("capture mismatch:\nhave: %s\nwant: %s\npattern: %s\ninput: %s",
+					have, want, test.pat, test.input)
+			}
+		})
+	}
+}
+
 func TestMatchWithTypes(t *testing.T) {
 	tests := []struct {
 		pat        string
@@ -1001,6 +1043,12 @@ func TestMatch(t *testing.T) {
 		// File.
 		{`package foo`, 1, `package foo;`},
 		{`package foo`, 0, `package bar;`},
+
+		// Imports.
+		{`import $_`, 1, `package foo; import "fmt"`},
+		{`import $_`, 1, `package foo; import ("fmt")`},
+		{`import $a`, 1, `package foo; import "fmt"`},
+		{`import $a`, 1, `package foo; import ("fmt")`},
 	}
 
 	for i := range tests {
@@ -1016,10 +1064,6 @@ func TestMatch(t *testing.T) {
 				return
 			}
 			target := testParseNode(t, token.NewFileSet(), test.input)
-			if err != nil {
-				t.Errorf("parse target `%s`: %v", test.input, err)
-				return
-			}
 			matches := 0
 			testAllMatches(pat, &state, target, func(m MatchData) {
 				matches++

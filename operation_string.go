@@ -2,9 +2,7 @@
 
 package gogrep
 
-import (
-	"strconv"
-)
+import "strconv"
 
 func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
@@ -127,12 +125,14 @@ func _() {
 	_ = x[opConstDecl-114]
 	_ = x[opVarDecl-115]
 	_ = x[opTypeDecl-116]
-	_ = x[opEmptyPackage-117]
+	_ = x[opAnyImportDecl-117]
+	_ = x[opImportDecl-118]
+	_ = x[opEmptyPackage-119]
 }
 
-const _operation_name = "InvalidNodeNamedNodeNodeSeqNamedNodeSeqOptNodeNamedOptNodeFieldNodeNamedFieldNodeMultiStmtMultiExprMultiDeclEndBasicLitStrictIntLitStrictFloatLitStrictCharLitStrictStringLitStrictComplexLitIdentStdlibPkgIndexExprSliceExprSliceFromExprSliceToExprSliceFromToExprSliceToCapExprSliceFromToCapExprFuncLitCompositeLitTypedCompositeLitSimpleSelectorExprSelectorExprTypeAssertExprTypeSwitchAssertExprStructTypeInterfaceTypeVoidFuncTypeFuncTypeArrayTypeSliceTypeMapTypeChanTypeKeyValueExprEllipsisTypedEllipsisStarExprUnaryExprBinaryExprParenExprArgListSimpleArgListVariadicCallExprNonVariadicCallExprCallExprAssignStmtMultiAssignStmtBranchStmtSimpleLabeledBranchStmtLabeledBranchStmtSimpleLabeledStmtLabeledStmtBlockStmtExprStmtGoStmtDeferStmtSendStmtEmptyStmtIncDecStmtReturnStmtIfStmtIfInitStmtIfElseStmtIfInitElseStmtIfNamedOptStmtIfNamedOptElseStmtSwitchStmtSwitchTagStmtSwitchInitStmtSwitchInitTagStmtSelectStmtTypeSwitchStmtTypeSwitchInitStmtCaseClauseDefaultCaseClauseCommClauseDefaultCommClauseForStmtForPostStmtForCondStmtForCondPostStmtForInitStmtForInitPostStmtForInitCondStmtForInitCondPostStmtRangeStmtRangeKeyStmtRangeKeyValueStmtFieldListUnnamedFieldSimpleFieldFieldMultiFieldValueSpecValueInitSpecTypedValueInitSpecTypedValueSpecTypeSpecTypeAliasSpecFuncDeclMethodDeclFuncProtoDeclMethodProtoDeclDeclStmtConstDeclVarDeclTypeDeclEmptyPackage"
+const _operation_name = "InvalidNodeNamedNodeNodeSeqNamedNodeSeqOptNodeNamedOptNodeFieldNodeNamedFieldNodeMultiStmtMultiExprMultiDeclEndBasicLitStrictIntLitStrictFloatLitStrictCharLitStrictStringLitStrictComplexLitIdentStdlibPkgIndexExprSliceExprSliceFromExprSliceToExprSliceFromToExprSliceToCapExprSliceFromToCapExprFuncLitCompositeLitTypedCompositeLitSimpleSelectorExprSelectorExprTypeAssertExprTypeSwitchAssertExprStructTypeInterfaceTypeVoidFuncTypeFuncTypeArrayTypeSliceTypeMapTypeChanTypeKeyValueExprEllipsisTypedEllipsisStarExprUnaryExprBinaryExprParenExprArgListSimpleArgListVariadicCallExprNonVariadicCallExprCallExprAssignStmtMultiAssignStmtBranchStmtSimpleLabeledBranchStmtLabeledBranchStmtSimpleLabeledStmtLabeledStmtBlockStmtExprStmtGoStmtDeferStmtSendStmtEmptyStmtIncDecStmtReturnStmtIfStmtIfInitStmtIfElseStmtIfInitElseStmtIfNamedOptStmtIfNamedOptElseStmtSwitchStmtSwitchTagStmtSwitchInitStmtSwitchInitTagStmtSelectStmtTypeSwitchStmtTypeSwitchInitStmtCaseClauseDefaultCaseClauseCommClauseDefaultCommClauseForStmtForPostStmtForCondStmtForCondPostStmtForInitStmtForInitPostStmtForInitCondStmtForInitCondPostStmtRangeStmtRangeKeyStmtRangeKeyValueStmtFieldListUnnamedFieldSimpleFieldFieldMultiFieldValueSpecValueInitSpecTypedValueInitSpecTypedValueSpecTypeSpecTypeAliasSpecFuncDeclMethodDeclFuncProtoDeclMethodProtoDeclDeclStmtConstDeclVarDeclTypeDeclAnyImportDeclImportDeclEmptyPackage"
 
-var _operation_index = [...]uint16{0, 7, 11, 20, 27, 39, 46, 58, 67, 81, 90, 99, 108, 111, 119, 131, 145, 158, 173, 189, 194, 203, 212, 221, 234, 245, 260, 274, 292, 299, 311, 328, 346, 358, 372, 392, 402, 415, 427, 435, 444, 453, 460, 468, 480, 488, 501, 509, 518, 528, 537, 544, 557, 573, 592, 600, 610, 625, 635, 658, 675, 692, 703, 712, 720, 726, 735, 743, 752, 762, 772, 778, 788, 798, 812, 826, 844, 854, 867, 881, 898, 908, 922, 940, 950, 967, 977, 994, 1001, 1012, 1023, 1038, 1049, 1064, 1079, 1098, 1107, 1119, 1136, 1145, 1157, 1168, 1173, 1183, 1192, 1205, 1223, 1237, 1245, 1258, 1266, 1276, 1289, 1304, 1312, 1321, 1328, 1336, 1348}
+var _operation_index = [...]uint16{0, 7, 11, 20, 27, 39, 46, 58, 67, 81, 90, 99, 108, 111, 119, 131, 145, 158, 173, 189, 194, 203, 212, 221, 234, 245, 260, 274, 292, 299, 311, 328, 346, 358, 372, 392, 402, 415, 427, 435, 444, 453, 460, 468, 480, 488, 501, 509, 518, 528, 537, 544, 557, 573, 592, 600, 610, 625, 635, 658, 675, 692, 703, 712, 720, 726, 735, 743, 752, 762, 772, 778, 788, 798, 812, 826, 844, 854, 867, 881, 898, 908, 922, 940, 950, 967, 977, 994, 1001, 1012, 1023, 1038, 1049, 1064, 1079, 1098, 1107, 1119, 1136, 1145, 1157, 1168, 1173, 1183, 1192, 1205, 1223, 1237, 1245, 1258, 1266, 1276, 1289, 1304, 1312, 1321, 1328, 1336, 1349, 1359, 1371}
 
 func (i operation) String() string {
 	if i >= operation(len(_operation_index)-1) {

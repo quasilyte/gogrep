@@ -551,6 +551,12 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 	case opTypeDecl:
 		n, ok := n.(*ast.GenDecl)
 		return ok && n.Tok == token.TYPE && m.matchSpecSlice(state, n.Specs)
+	case opAnyImportDecl:
+		n, ok := n.(*ast.GenDecl)
+		return ok && n.Tok == token.IMPORT
+	case opImportDecl:
+		n, ok := n.(*ast.GenDecl)
+		return ok && n.Tok == token.IMPORT && m.matchSpecSlice(state, n.Specs)
 
 	case opEmptyPackage:
 		n, ok := n.(*ast.File)

@@ -175,6 +175,9 @@ var opPrototypes = []operationProto{
 	{name: "VarDecl", tag: "GenDecl", args: "valuespecs..."},
 	{name: "TypeDecl", tag: "GenDecl", args: "typespecs..."},
 
+	{name: "AnyImportDecl", tag: "GenDecl"},
+	{name: "ImportDecl", tag: "GenDecl", args: "importspecs..."},
+
 	{name: "EmptyPackage", tag: "File", args: "name"},
 }
 
