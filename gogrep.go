@@ -1,6 +1,7 @@
 package gogrep
 
 import (
+	"errors"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -105,6 +106,9 @@ func Compile(config CompileConfig) (*Pattern, PatternInfo, error) {
 	n, err := parseExpr(config.Fset, config.Src)
 	if err != nil {
 		return nil, info, err
+	}
+	if n == nil {
+		return nil, info, errors.New("invalid pattern syntax")
 	}
 	var c compiler
 	c.config = config
