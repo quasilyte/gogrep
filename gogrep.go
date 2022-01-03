@@ -98,7 +98,7 @@ type CompileConfig struct {
 }
 
 func Compile(config CompileConfig) (*Pattern, PatternInfo, error) {
-	if strings.HasPrefix(config.Src, "import") {
+	if strings.HasPrefix(config.Src, "import $") {
 		return compileImportPattern(config)
 	}
 	info := newPatternInfo()

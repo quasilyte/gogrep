@@ -30,32 +30,28 @@ func compileImportPattern(config CompileConfig) (*Pattern, PatternInfo, error) {
 
 	info := newPatternInfo()
 	src := config.Src
-	if strings.HasPrefix(src, "import $") {
-		src = src[len("import $"):]
-		if src == "" {
-			return nil, info, errors.New("expected ident after $, found EOF")
-		}
-		varname, rest := readIdent(src)
-		if strings.TrimSpace(rest) != "" {
-			return nil, info, fmt.Errorf("unexpected %s", rest)
-		}
-		var p program
-		if varname != "_" {
-			info.Vars[src] = struct{}{}
-			p.strings = []string{varname}
-			p.insts = []instruction{
-				{op: opImportDecl},
-				{op: opNamedNodeSeq, valueIndex: 0},
-				{op: opEnd},
-			}
-		} else {
-			p.insts = []instruction{
-				{op: opAnyImportDecl},
-			}
-		}
-		m := matcher{prog: &p, insts: p.insts}
-		return &Pattern{m: &m}, info, nil
+	src = src[len("import $"):]
+	if src == "" {
+		return nil, info, errors.New("expected ident after $, found EOF")
 	}
-
-	return nil, info, errors.New("unsupported import() pattern")
+	varname, rest := readIdent(src)
+	if strings.TrimSpace(rest) != "" {
+		return nil, info, fmt.Errorf("unexpected %s", rest)
+	}
+	var p program
+	if varname != "_" {
+		info.Vars[src] = struct{}{}
+		p.strings = []string{varname}
+		p.insts = []instruction{
+			{op: opImportDecl},
+			{op: opNamedNodeSeq, valueIndex: 0},
+			{op: opEnd},
+		}
+	} else {
+		p.insts = []instruction{
+			{op: opAnyImportDecl},
+		}
+	}
+	m := matcher{prog: &p, insts: p.insts}
+	return &Pattern{m: &m}, info, nil
 }

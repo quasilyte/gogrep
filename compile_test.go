@@ -434,6 +434,12 @@ func TestCompileWildcard(t *testing.T) {
 			` • NamedNodeSeq imports`,
 			` • End`,
 		},
+
+		`importFoo()`: {
+			`NonVariadicCallExpr`,
+			` • Ident importFoo`,
+			` • SimpleArgList 0`,
+		},
 	})
 
 	for i := range tests {
