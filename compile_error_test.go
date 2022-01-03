@@ -44,6 +44,11 @@ func TestCompileError(t *testing.T) {
 
 		intStatements:         `implementation limitation: too many values`,
 		strict(intStatements): `implementation limitation: too many string values`,
+
+		// Below is a list of patterns that caused gogrep to panic.
+		// Found with fuzzing.
+		`()`: `expected operand, found ')'`,
+		`=0`: `invalid pattern syntax`,
 	}
 
 	for input, want := range tests {

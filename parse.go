@@ -197,8 +197,11 @@ func parseDetectingNode(fset *token.FileSet, src string) (ast.Node, *ast.File, e
 	// value specs
 	asValSpec := execTmpl(tmplValSpec, src)
 	if f, err := parser.ParseFile(fset, "", asValSpec, 0); err == nil && noBadNodes(f) {
-		vs := f.Decls[0].(*ast.GenDecl).Specs[0].(*ast.ValueSpec)
-		return vs, f, nil
+		decl := f.Decls[0].(*ast.GenDecl)
+		if len(decl.Specs) != 0 {
+			vs := f.Decls[0].(*ast.GenDecl).Specs[0].(*ast.ValueSpec)
+			return vs, f, nil
+		}
 	}
 
 	return nil, nil, mainErr
