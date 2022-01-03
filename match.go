@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/go-toolsmith/astequal"
-	"github.com/quasilyte/gogrep/internal/stdinfo"
 )
 
 type matcher struct {
@@ -186,7 +185,7 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 		n, ok := n.(*ast.Ident)
 		return ok && m.stringValue(inst) == n.Name
 
-	case opStdlibPkg:
+	case opPkg:
 		n, ok := n.(*ast.Ident)
 		if !ok {
 			return false
@@ -196,8 +195,7 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 			return false
 		}
 		pkgName, ok := obj.(*types.PkgName)
-		return ok && m.stringValue(inst) == pkgName.Imported().Name() &&
-			pkgName.Imported().Path() == stdinfo.Packages[pkgName.Imported().Name()]
+		return ok && pkgName.Imported().Path() == m.stringValue(inst)
 
 	case opBinaryExpr:
 		n, ok := n.(*ast.BinaryExpr)

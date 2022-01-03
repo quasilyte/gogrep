@@ -38,7 +38,7 @@ var opPrototypes = []operationProto{
 	{name: "StrictComplexLit", tag: "BasicLit", valueIndex: "strings | raw literal value"},
 
 	{name: "Ident", tag: "Ident", valueIndex: "strings | ident name"},
-	{name: "StdlibPkg", tag: "Ident", valueIndex: "strings | package name"},
+	{name: "Pkg", tag: "Ident", valueIndex: "strings | package path"},
 
 	{name: "IndexExpr", tag: "IndexExpr", args: "x expr"},
 

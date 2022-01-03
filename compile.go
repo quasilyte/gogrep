@@ -493,24 +493,41 @@ func (c *compiler) compileCallExpr(n *ast.CallExpr) {
 // can look like `fmt.Sprint`. It will be compiled as a special
 // selector expression that requires `fmt` to be a package as opposed
 // to only check that it's an identifier with "fmt" value.
-func (c *compiler) compileSymbol(fn ast.Expr) {
+func (c *compiler) compileSymbol(sym ast.Expr) {
+	compilePkgSymbol := func(c *compiler, sym ast.Expr) bool {
+		e, ok := sym.(*ast.SelectorExpr)
+		if !ok {
+			return false
+		}
+		ident, ok := e.X.(*ast.Ident)
+		if !ok || isWildName(e.Sel.Name) {
+			return false
+		}
+		pkgPath := c.config.Imports[ident.Name]
+		if pkgPath == "" && stdinfo.Packages[ident.Name] != "" {
+			pkgPath = stdinfo.Packages[ident.Name]
+		}
+		if pkgPath == "" {
+			return false
+		}
+		c.emitInst(instruction{
+			op:         opSimpleSelectorExpr,
+			valueIndex: c.internString(e.Sel, e.Sel.String()),
+		})
+		c.emitInst(instruction{
+			op:         opPkg,
+			valueIndex: c.internString(ident, pkgPath),
+		})
+		return true
+	}
+
 	if c.config.WithTypes {
-		if e, ok := fn.(*ast.SelectorExpr); ok {
-			if ident, ok := e.X.(*ast.Ident); ok && stdinfo.Packages[ident.Name] != "" && !isWildName(e.Sel.Name) {
-				c.emitInst(instruction{
-					op:         opSimpleSelectorExpr,
-					valueIndex: c.internString(e.Sel, e.Sel.String()),
-				})
-				c.emitInst(instruction{
-					op:         opStdlibPkg,
-					valueIndex: c.internString(ident, ident.Name),
-				})
-				return
-			}
+		if compilePkgSymbol(c, sym) {
+			return
 		}
 	}
 
-	c.compileExpr(fn)
+	c.compileExpr(sym)
 }
 
 func (c *compiler) compileUnaryExpr(n *ast.UnaryExpr) {
