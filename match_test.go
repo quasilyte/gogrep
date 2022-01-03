@@ -62,17 +62,46 @@ func TestMatchWithTypes(t *testing.T) {
 	}{
 		{`fmt.Sprintf($*_)`, 2},
 		{`fmt.$_($*_)`, 2},
+
+		{`rand.Read($_)`, 1},
+
+		{`astequal.Expr($*_)`, 1},
 	}
 
 	fileSrc := `package example
 
 import (
 	"fmt"
+	"github.com/go-toolsmith/astequal"
+	crand "crypto/rand"
+	"math/rand"
 )
 
 func testFunc(format string, args []interface{}) {
 	_ = fmt.Sprintf("%d", 1)
 	_ = fmt.Sprintf(format, args...)
+	_ = astequal.Expr(nil, nil)
+	_, _ = crand.Read(nil)
+	_, _ = rand.Read(nil)
+	_, _ = rand.Read(nil)
+}
+
+type dummy struct{}
+
+func (dummy) Expr(x, y interface{}) bool { return false }
+
+func (dummy) Read(b []byte) (int, error) { return 0, nil }
+
+func _() {
+	var astequal dummy
+	_ = astequal.Expr(nil, nil)
+	_ = astequal.Expr(1, nil)
+	_ = astequal.Expr(1, 2)
+}
+
+func _() {
+	var rand dummy
+	_, _ = rand.Read(nil)
 }
 `
 	fset := token.NewFileSet()
@@ -86,11 +115,16 @@ func testFunc(format string, args []interface{}) {
 		Uses:  make(map[*ast.Ident]types.Object),
 	}
 	typechecker := &types.Config{
-		Importer: importer.Default(),
+		Importer: importer.ForCompiler(fset, "source", nil),
 	}
 	_, err = typechecker.Check("example", fset, []*ast.File{f}, typesInfo)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	customImports := map[string]string{
+		"astequal": "github.com/go-toolsmith/astequal",
+		"rand":     "crypto/rand",
 	}
 
 	for i := range tests {
@@ -100,7 +134,12 @@ func testFunc(format string, args []interface{}) {
 			state.Types = typesInfo
 			fset := token.NewFileSet()
 			testPattern := test.pat
-			config := CompileConfig{Fset: fset, Src: testPattern, WithTypes: true}
+			config := CompileConfig{
+				Fset:      fset,
+				Src:       testPattern,
+				WithTypes: true,
+				Imports:   customImports,
+			}
 			pat, _, err := Compile(config)
 			if err != nil {
 				t.Errorf("compile `%s`: %v", test.pat, err)
@@ -1057,7 +1096,11 @@ func TestMatch(t *testing.T) {
 			state := NewMatcherState()
 			fset := token.NewFileSet()
 			testPattern := unwrapPattern(test.pat)
-			config := CompileConfig{Fset: fset, Src: testPattern, Strict: isStrict(test.pat)}
+			config := CompileConfig{
+				Fset:   fset,
+				Src:    testPattern,
+				Strict: isStrict(test.pat),
+			}
 			pat, _, err := Compile(config)
 			if err != nil {
 				t.Errorf("compile `%s`: %v", test.pat, err)

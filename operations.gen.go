@@ -87,8 +87,8 @@ const (
 	opIdent operation = 19
 
 	// Tag: Ident
-	// ValueIndex: strings | package name
-	opStdlibPkg operation = 20
+	// ValueIndex: strings | package path
+	opPkg operation = 20
 
 	// Tag: IndexExpr
 	// Args: x expr
@@ -713,7 +713,7 @@ var operationInfoTable = [256]operationInfo{
 		VariadicMap:    0, // 0
 		SliceIndex:     -1,
 	},
-	opStdlibPkg: {
+	opPkg: {
 		Tag:            nodetag.Ident,
 		NumArgs:        0,
 		ValueKind:      emptyValue,

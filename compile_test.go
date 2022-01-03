@@ -28,11 +28,21 @@ func runCompileTest(t *testing.T, i int, test compileTest, withTypes bool) {
 			return s
 		}
 
+		customImports := map[string]string{
+			"errors": "github.com/pkg/errors",
+		}
+
 		strict := isStrict(test.input)
 		input := unwrapPattern(test.input)
 		want := test.output
 		fset := token.NewFileSet()
-		config := CompileConfig{Fset: fset, Src: input, Strict: strict, WithTypes: withTypes}
+		config := CompileConfig{
+			Fset:      fset,
+			Src:       input,
+			Strict:    strict,
+			WithTypes: withTypes,
+			Imports:   customImports,
+		}
 		p, _, err := Compile(config)
 		if err != nil {
 			t.Errorf("compile `%s`: %v", input, err)
@@ -449,7 +459,7 @@ func TestCompileWildcardWithTypes(t *testing.T) {
 	}
 }
 
-func TestCompile(t *testing.T) {
+func TestCompileWithTypes(t *testing.T) {
 	tests := compileTestsFromMap(map[string][]string{
 		`package p;`: {
 			`EmptyPackage`,
@@ -1028,7 +1038,7 @@ func TestCompile(t *testing.T) {
 		`fmt.Println(5, 6)`: {
 			`NonVariadicCallExpr`,
 			` • SimpleSelectorExpr Println`,
-			` •  • StdlibPkg fmt`,
+			` •  • Pkg fmt`,
 			` • SimpleArgList 2`,
 			` •  • BasicLit 5`,
 			` •  • BasicLit 6`,
@@ -1039,9 +1049,27 @@ func TestCompile(t *testing.T) {
 			` • Ident x`,
 			` • NonVariadicCallExpr`,
 			` •  • SimpleSelectorExpr Sprint`,
-			` •  •  • StdlibPkg fmt`,
+			` •  •  • Pkg fmt`,
 			` •  • SimpleArgList 1`,
 			` •  •  • Ident y`,
+		},
+
+		`rand.Intn(10)`: {
+			`NonVariadicCallExpr`,
+			` • SimpleSelectorExpr Intn`,
+			` •  • Pkg math/rand`,
+			` • SimpleArgList 1`,
+			` •  • BasicLit 10`,
+		},
+
+		`return errors.New("foo")`: {
+			`ReturnStmt`,
+			` • NonVariadicCallExpr`,
+			` •  • SimpleSelectorExpr New`,
+			` •  •  • Pkg github.com/pkg/errors`,
+			` •  • SimpleArgList 1`,
+			` •  •  • BasicLit "foo"`,
+			` • End`,
 		},
 
 		`const (x = 1; y = 2)`: {

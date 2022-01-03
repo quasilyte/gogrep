@@ -90,6 +90,11 @@ type CompileConfig struct {
 	// fmt.Printf maps to the stdlib function call but not Printf method call on some
 	// random fmt variable.
 	WithTypes bool
+
+	// Imports specifies packages that should be recognized for the type-aware matching.
+	// It maps a package name to a package path.
+	// Only used if WithTypes is true.
+	Imports map[string]string
 }
 
 func Compile(config CompileConfig) (*Pattern, PatternInfo, error) {
