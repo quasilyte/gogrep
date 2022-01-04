@@ -13,6 +13,81 @@ import (
 
 // FIXME: find test case duplicates.
 
+func TestMatchPos(t *testing.T) {
+	tests := []struct {
+		pat     string
+		input   string
+		matched string
+	}{
+		{
+			`for $_, $v := range $xs`,
+			`package p; func _() { for _, v := range elems {} }`,
+			`for _, v := range elems`,
+		},
+		{
+			`for $_, $v := range $xs`,
+			`package p
+				func _() {
+					for _, v := range f()[:] {
+						println(v)
+					}
+				}
+			`,
+			`for _, v := range f()[:]`,
+		},
+
+		{
+			`range $x`,
+			`package p; func _() { for range xs {} }`,
+			`range xs`,
+		},
+		{
+			`range $x`,
+			`package p; func _() { for i := range xs[:] {} }`,
+			`range xs[:]`,
+		},
+		{
+			`range $x`,
+			`package p; func _() { for i, v := range f() {} }`,
+			`range f()`,
+		},
+		{
+			`range $x`,
+			`package p; func _() { for i = range xs[:] {} }`,
+			`range xs[:]`,
+		},
+		{
+			`range $x`,
+			`package p; func _() { for i, v = range f() {} }`,
+			`range f()`,
+		},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+			state := NewMatcherState()
+			config := CompileConfig{Fset: token.NewFileSet(), Src: test.pat}
+			pat, _, err := Compile(config)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fset := token.NewFileSet()
+			target := testParseNode(t, fset, test.input)
+			matched := ""
+			testAllMatches(pat, &state, target, func(m MatchData) {
+				from := fset.Position(m.Node.Pos()).Offset
+				to := fset.Position(m.Node.End()).Offset
+				matched = test.input[from:to]
+			})
+			if matched != test.matched {
+				t.Fatalf("result mismatch:\nhave: %q\nwant: %q\npattern: %s\ninput: %s",
+					matched, test.matched, test.pat, test.input)
+			}
+		})
+	}
+}
+
 func TestMatchCapture(t *testing.T) {
 	tests := []struct {
 		pat     string
@@ -832,6 +907,18 @@ func TestMatch(t *testing.T) {
 		{`range (xs)`, 1, `for i := range (xs) {}`},
 		{`range xs`, 0, `for i := range ys { f(i) }`},
 		{`range (xs)`, 0, `for i := range xs {}`},
+
+		// Range header.
+		{`for range $x`, 1, `for range xs {}`},
+		{`for range $x`, 0, `for i := range xs {}`},
+		{`for range $x`, 0, `for i = range xs {}`},
+		{`for $i := range $xs`, 1, `for i := range data {}`},
+		{`for $i := range $xs`, 0, `for i = range data {}`},
+		{`for $i := range $xs`, 0, `for i, x := range data {}`},
+		{`for $_, $i := range $xs`, 1, `for _, v := range data {}`},
+		{`for $_, $i := range $xs`, 1, `for i, v := range data {}`},
+		{`for $_, $i := range $xs`, 0, `for i = range data {}`},
+		{`for $_, $i := range $xs`, 0, `for range data {}`},
 
 		// Mixing expr and stmt lists.
 		{`$x, $y`, 0, `{ 1; 2 }`},

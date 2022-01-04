@@ -446,6 +446,13 @@ func TestCompileWildcard(t *testing.T) {
 			` • ParenExpr`,
 			` •  • Node`,
 		},
+
+		`for $_, $v := range $xs`: {
+			`RangeKeyValueHeader :=`,
+			` • Node`,
+			` • NamedNode v`,
+			` • NamedNode xs`,
+		},
 	})
 
 	for i := range tests {

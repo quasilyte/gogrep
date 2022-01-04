@@ -144,6 +144,16 @@ func parseDetectingNode(fset *token.FileSet, src string) (ast.Node, error) {
 			return &rangeClause{X: e}, nil
 		}
 	}
+	if strings.HasPrefix(src, "for ") && !strings.HasSuffix(src, "}") {
+		asStmts := execTmpl(tmplStmts, src+"{}")
+		f, err := parser.ParseFile(fset, "", asStmts, 0)
+		if err == nil && noBadNodes(f) {
+			bl := f.Decls[0].(*ast.FuncDecl).Body
+			if len(bl.List) == 1 {
+				return &rangeHeader{Node: bl.List[0].(*ast.RangeStmt)}, nil
+			}
+		}
+	}
 
 	// try as a block; otherwise blocks might be mistaken for composite
 	// literals further below
@@ -376,5 +386,12 @@ type rangeClause struct {
 	X ast.Expr
 }
 
+type rangeHeader struct {
+	Node *ast.RangeStmt
+}
+
 func (*rangeClause) Pos() token.Pos { return 0 }
 func (*rangeClause) End() token.Pos { return 0 }
+
+func (*rangeHeader) Pos() token.Pos { return 0 }
+func (*rangeHeader) End() token.Pos { return 0 }
