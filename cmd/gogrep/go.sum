@@ -15,6 +15,8 @@ github.com/quasilyte/gogrep v0.0.0-20211222142514-47561ea9892a h1:WX7f23lL4qeJ4x
 github.com/quasilyte/gogrep v0.0.0-20211222142514-47561ea9892a/go.mod h1:cOIDw+gi1CMpN7VMVdiMUadtrZau1JPspiuxNmvCruU=
 github.com/quasilyte/gogrep v0.0.0-20220102211148-b1ef2ec3d91c h1:eOnLZQFtiqhle+zd6F39v9afJUXoTIVCSjPc2CUC07c=
 github.com/quasilyte/gogrep v0.0.0-20220102211148-b1ef2ec3d91c/go.mod h1:wSEyW6O61xRV6zb6My3HxrQ5/8ke7NE2OayqCHa3xRM=
+github.com/quasilyte/gogrep v0.0.0-20220104185649-039753a3dd32 h1:fJhpG5LYGnHZqUIDULZkvQKJfdtAefNrkoiGCezlr7g=
+github.com/quasilyte/gogrep v0.0.0-20220104185649-039753a3dd32/go.mod h1:wSEyW6O61xRV6zb6My3HxrQ5/8ke7NE2OayqCHa3xRM=
 github.com/quasilyte/perf-heatmap v0.0.0-20211220115704-5477e07beb6c/go.mod h1:mPJZP5qrgK90IzVVdmPOOJhTXyy65WoldUR1QPeh6AU=
 github.com/quasilyte/perf-heatmap v0.0.0-20211220153856-7361377975b8 h1:XTVqxdjLyMjPMSOaHFsjIqeu1EeUensbK97c2I29In8=
 github.com/quasilyte/perf-heatmap v0.0.0-20211220153856-7361377975b8/go.mod h1:mPJZP5qrgK90IzVVdmPOOJhTXyy65WoldUR1QPeh6AU=
