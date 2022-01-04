@@ -106,33 +106,34 @@ func _() {
 	_ = x[opRangeStmt-95]
 	_ = x[opRangeKeyStmt-96]
 	_ = x[opRangeKeyValueStmt-97]
-	_ = x[opFieldList-98]
-	_ = x[opUnnamedField-99]
-	_ = x[opSimpleField-100]
-	_ = x[opField-101]
-	_ = x[opMultiField-102]
-	_ = x[opValueSpec-103]
-	_ = x[opValueInitSpec-104]
-	_ = x[opTypedValueInitSpec-105]
-	_ = x[opTypedValueSpec-106]
-	_ = x[opTypeSpec-107]
-	_ = x[opTypeAliasSpec-108]
-	_ = x[opFuncDecl-109]
-	_ = x[opMethodDecl-110]
-	_ = x[opFuncProtoDecl-111]
-	_ = x[opMethodProtoDecl-112]
-	_ = x[opDeclStmt-113]
-	_ = x[opConstDecl-114]
-	_ = x[opVarDecl-115]
-	_ = x[opTypeDecl-116]
-	_ = x[opAnyImportDecl-117]
-	_ = x[opImportDecl-118]
-	_ = x[opEmptyPackage-119]
+	_ = x[opRangeClause-98]
+	_ = x[opFieldList-99]
+	_ = x[opUnnamedField-100]
+	_ = x[opSimpleField-101]
+	_ = x[opField-102]
+	_ = x[opMultiField-103]
+	_ = x[opValueSpec-104]
+	_ = x[opValueInitSpec-105]
+	_ = x[opTypedValueInitSpec-106]
+	_ = x[opTypedValueSpec-107]
+	_ = x[opTypeSpec-108]
+	_ = x[opTypeAliasSpec-109]
+	_ = x[opFuncDecl-110]
+	_ = x[opMethodDecl-111]
+	_ = x[opFuncProtoDecl-112]
+	_ = x[opMethodProtoDecl-113]
+	_ = x[opDeclStmt-114]
+	_ = x[opConstDecl-115]
+	_ = x[opVarDecl-116]
+	_ = x[opTypeDecl-117]
+	_ = x[opAnyImportDecl-118]
+	_ = x[opImportDecl-119]
+	_ = x[opEmptyPackage-120]
 }
 
-const _operation_name = "InvalidNodeNamedNodeNodeSeqNamedNodeSeqOptNodeNamedOptNodeFieldNodeNamedFieldNodeMultiStmtMultiExprMultiDeclEndBasicLitStrictIntLitStrictFloatLitStrictCharLitStrictStringLitStrictComplexLitIdentPkgIndexExprSliceExprSliceFromExprSliceToExprSliceFromToExprSliceToCapExprSliceFromToCapExprFuncLitCompositeLitTypedCompositeLitSimpleSelectorExprSelectorExprTypeAssertExprTypeSwitchAssertExprStructTypeInterfaceTypeVoidFuncTypeFuncTypeArrayTypeSliceTypeMapTypeChanTypeKeyValueExprEllipsisTypedEllipsisStarExprUnaryExprBinaryExprParenExprArgListSimpleArgListVariadicCallExprNonVariadicCallExprCallExprAssignStmtMultiAssignStmtBranchStmtSimpleLabeledBranchStmtLabeledBranchStmtSimpleLabeledStmtLabeledStmtBlockStmtExprStmtGoStmtDeferStmtSendStmtEmptyStmtIncDecStmtReturnStmtIfStmtIfInitStmtIfElseStmtIfInitElseStmtIfNamedOptStmtIfNamedOptElseStmtSwitchStmtSwitchTagStmtSwitchInitStmtSwitchInitTagStmtSelectStmtTypeSwitchStmtTypeSwitchInitStmtCaseClauseDefaultCaseClauseCommClauseDefaultCommClauseForStmtForPostStmtForCondStmtForCondPostStmtForInitStmtForInitPostStmtForInitCondStmtForInitCondPostStmtRangeStmtRangeKeyStmtRangeKeyValueStmtFieldListUnnamedFieldSimpleFieldFieldMultiFieldValueSpecValueInitSpecTypedValueInitSpecTypedValueSpecTypeSpecTypeAliasSpecFuncDeclMethodDeclFuncProtoDeclMethodProtoDeclDeclStmtConstDeclVarDeclTypeDeclAnyImportDeclImportDeclEmptyPackage"
+const _operation_name = "InvalidNodeNamedNodeNodeSeqNamedNodeSeqOptNodeNamedOptNodeFieldNodeNamedFieldNodeMultiStmtMultiExprMultiDeclEndBasicLitStrictIntLitStrictFloatLitStrictCharLitStrictStringLitStrictComplexLitIdentPkgIndexExprSliceExprSliceFromExprSliceToExprSliceFromToExprSliceToCapExprSliceFromToCapExprFuncLitCompositeLitTypedCompositeLitSimpleSelectorExprSelectorExprTypeAssertExprTypeSwitchAssertExprStructTypeInterfaceTypeVoidFuncTypeFuncTypeArrayTypeSliceTypeMapTypeChanTypeKeyValueExprEllipsisTypedEllipsisStarExprUnaryExprBinaryExprParenExprArgListSimpleArgListVariadicCallExprNonVariadicCallExprCallExprAssignStmtMultiAssignStmtBranchStmtSimpleLabeledBranchStmtLabeledBranchStmtSimpleLabeledStmtLabeledStmtBlockStmtExprStmtGoStmtDeferStmtSendStmtEmptyStmtIncDecStmtReturnStmtIfStmtIfInitStmtIfElseStmtIfInitElseStmtIfNamedOptStmtIfNamedOptElseStmtSwitchStmtSwitchTagStmtSwitchInitStmtSwitchInitTagStmtSelectStmtTypeSwitchStmtTypeSwitchInitStmtCaseClauseDefaultCaseClauseCommClauseDefaultCommClauseForStmtForPostStmtForCondStmtForCondPostStmtForInitStmtForInitPostStmtForInitCondStmtForInitCondPostStmtRangeStmtRangeKeyStmtRangeKeyValueStmtRangeClauseFieldListUnnamedFieldSimpleFieldFieldMultiFieldValueSpecValueInitSpecTypedValueInitSpecTypedValueSpecTypeSpecTypeAliasSpecFuncDeclMethodDeclFuncProtoDeclMethodProtoDeclDeclStmtConstDeclVarDeclTypeDeclAnyImportDeclImportDeclEmptyPackage"
 
-var _operation_index = [...]uint16{0, 7, 11, 20, 27, 39, 46, 58, 67, 81, 90, 99, 108, 111, 119, 131, 145, 158, 173, 189, 194, 197, 206, 215, 228, 239, 254, 268, 286, 293, 305, 322, 340, 352, 366, 386, 396, 409, 421, 429, 438, 447, 454, 462, 474, 482, 495, 503, 512, 522, 531, 538, 551, 567, 586, 594, 604, 619, 629, 652, 669, 686, 697, 706, 714, 720, 729, 737, 746, 756, 766, 772, 782, 792, 806, 820, 838, 848, 861, 875, 892, 902, 916, 934, 944, 961, 971, 988, 995, 1006, 1017, 1032, 1043, 1058, 1073, 1092, 1101, 1113, 1130, 1139, 1151, 1162, 1167, 1177, 1186, 1199, 1217, 1231, 1239, 1252, 1260, 1270, 1283, 1298, 1306, 1315, 1322, 1330, 1343, 1353, 1365}
+var _operation_index = [...]uint16{0, 7, 11, 20, 27, 39, 46, 58, 67, 81, 90, 99, 108, 111, 119, 131, 145, 158, 173, 189, 194, 197, 206, 215, 228, 239, 254, 268, 286, 293, 305, 322, 340, 352, 366, 386, 396, 409, 421, 429, 438, 447, 454, 462, 474, 482, 495, 503, 512, 522, 531, 538, 551, 567, 586, 594, 604, 619, 629, 652, 669, 686, 697, 706, 714, 720, 729, 737, 746, 756, 766, 772, 782, 792, 806, 820, 838, 848, 861, 875, 892, 902, 916, 934, 944, 961, 971, 988, 995, 1006, 1017, 1032, 1043, 1058, 1073, 1092, 1101, 1113, 1130, 1141, 1150, 1162, 1173, 1178, 1188, 1197, 1210, 1228, 1242, 1250, 1263, 1271, 1281, 1294, 1309, 1317, 1326, 1333, 1341, 1354, 1364, 1376}
 
 func (i operation) String() string {
 	if i >= operation(len(_operation_index)-1) {

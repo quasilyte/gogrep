@@ -451,102 +451,107 @@ const (
 	// Value: token.Token | ':=' or '='
 	opRangeKeyValueStmt operation = 97
 
+	// Tag: RangeStmt
+	// Args: x
+	// Example: range x
+	opRangeClause operation = 98
+
 	// Tag: Unknown
 	// Args: fields...
-	opFieldList operation = 98
+	opFieldList operation = 99
 
 	// Tag: Unknown
 	// Args: typ
 	// Example: type
-	opUnnamedField operation = 99
+	opUnnamedField operation = 100
 
 	// Tag: Unknown
 	// Args: typ
 	// Example: name type
 	// ValueIndex: strings | field name
-	opSimpleField operation = 100
+	opSimpleField operation = 101
 
 	// Tag: Unknown
 	// Args: name typ
 	// Example: $name type
-	opField operation = 101
+	opField operation = 102
 
 	// Tag: Unknown
 	// Args: names... typ
 	// Example: name1, name2 type
-	opMultiField operation = 102
+	opMultiField operation = 103
 
 	// Tag: ValueSpec
 	// Args: value
-	opValueSpec operation = 103
+	opValueSpec operation = 104
 
 	// Tag: ValueSpec
 	// Args: lhs... rhs...
 	// Example: lhs = rhs
-	opValueInitSpec operation = 104
+	opValueInitSpec operation = 105
 
 	// Tag: ValueSpec
 	// Args: lhs... type rhs...
 	// Example: lhs typ = rhs
-	opTypedValueInitSpec operation = 105
+	opTypedValueInitSpec operation = 106
 
 	// Tag: ValueSpec
 	// Args: lhs... type
 	// Example: lhs typ
-	opTypedValueSpec operation = 106
+	opTypedValueSpec operation = 107
 
 	// Tag: TypeSpec
 	// Args: name type
 	// Example: name type
-	opTypeSpec operation = 107
+	opTypeSpec operation = 108
 
 	// Tag: TypeSpec
 	// Args: name type
 	// Example: name = type
-	opTypeAliasSpec operation = 108
+	opTypeAliasSpec operation = 109
 
 	// Tag: FuncDecl
 	// Args: name type block
-	opFuncDecl operation = 109
+	opFuncDecl operation = 110
 
 	// Tag: FuncDecl
 	// Args: recv name type block
-	opMethodDecl operation = 110
+	opMethodDecl operation = 111
 
 	// Tag: FuncDecl
 	// Args: name type
-	opFuncProtoDecl operation = 111
+	opFuncProtoDecl operation = 112
 
 	// Tag: FuncDecl
 	// Args: recv name type
-	opMethodProtoDecl operation = 112
+	opMethodProtoDecl operation = 113
 
 	// Tag: DeclStmt
 	// Args: decl
-	opDeclStmt operation = 113
+	opDeclStmt operation = 114
 
 	// Tag: GenDecl
 	// Args: valuespecs...
-	opConstDecl operation = 114
+	opConstDecl operation = 115
 
 	// Tag: GenDecl
 	// Args: valuespecs...
-	opVarDecl operation = 115
+	opVarDecl operation = 116
 
 	// Tag: GenDecl
 	// Args: typespecs...
-	opTypeDecl operation = 116
+	opTypeDecl operation = 117
 
 	// Tag: GenDecl
-	opAnyImportDecl operation = 117
+	opAnyImportDecl operation = 118
 
 	// Tag: GenDecl
 	// Args: importspecs...
-	opImportDecl operation = 118
+	opImportDecl operation = 119
 
 	// Tag: File
 	// Args: name
-	opEmptyPackage operation = 119
+	opEmptyPackage operation = 120
 )
 
 type operationInfo struct {
@@ -1333,6 +1338,14 @@ var operationInfoTable = [256]operationInfo{
 		Tag:            nodetag.RangeStmt,
 		NumArgs:        4,
 		ValueKind:      tokenValue,
+		ExtraValueKind: emptyValue,
+		VariadicMap:    0, // 0
+		SliceIndex:     -1,
+	},
+	opRangeClause: {
+		Tag:            nodetag.RangeStmt,
+		NumArgs:        1,
+		ValueKind:      emptyValue,
 		ExtraValueKind: emptyValue,
 		VariadicMap:    0, // 0
 		SliceIndex:     -1,

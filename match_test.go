@@ -24,6 +24,12 @@ func TestMatchCapture(t *testing.T) {
 		{`import $i`, `package p; import ("fmt"; "strings")`, `i:"fmt"; "strings"`},
 		{`import $imports`, `package p; import ("fmt"; "strings")`, `imports:"fmt"; "strings"`},
 		{`import $imports`, `package p; import (crand "crypto/rand"; "strings")`, `imports:crand "crypto/rand"; "strings"`},
+
+		{
+			`range $x`,
+			`package p; func _() { for i, x := range data[0] { println(i, x) } }`,
+			`x:data[0]`,
+		},
 	}
 
 	for i := range tests {
@@ -810,6 +816,16 @@ func TestMatch(t *testing.T) {
 		// {`for $*x {}; for $*x {}`, 0, `{ for range xs {}; for range ys {} }`},
 		// {`for $*x {}; for $*x {}`, 1, `{ for a(); b(); {}; for a(); b(); {} }`},
 		// {`for $*x {}; for $*x {}`, 0, `{ for a(); b(); {}; for a(); b(); c() {} }`},
+
+		// Range clause.
+		{`range xs`, 1, `for i := range xs {}`},
+		{`range xs`, 1, `for i := range xs { f(i) }`},
+		{`range $x`, 1, `for i := range x { f(i) }`},
+		{`range $x`, 1, `for i := range y { f(i) }`},
+		{`range $x`, 2, `for _, xs := range a { for _, x := range xs { println(x) } }`},
+		{`range (xs)`, 1, `for i := range (xs) {}`},
+		{`range xs`, 0, `for i := range ys { f(i) }`},
+		{`range (xs)`, 0, `for i := range xs {}`},
 
 		// Mixing expr and stmt lists.
 		{`$x, $y`, 0, `{ 1; 2 }`},

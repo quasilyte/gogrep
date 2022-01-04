@@ -150,6 +150,7 @@ var opPrototypes = []operationProto{
 	{name: "RangeStmt", tag: "RangeStmt", args: "x block", example: "for range x {}"},
 	{name: "RangeKeyStmt", tag: "RangeStmt", args: "key x block", value: "token.Token | ':=' or '='", example: "for key := range x {}"},
 	{name: "RangeKeyValueStmt", tag: "RangeStmt", args: "key value x block", value: "token.Token | ':=' or '='", example: "for key, value := range x {}"},
+	{name: "RangeClause", tag: "RangeStmt", args: "x", example: "range x"},
 
 	{name: "FieldList", args: "fields..."},
 	{name: "UnnamedField", args: "typ", example: "type"},

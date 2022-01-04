@@ -433,6 +433,9 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 		n, ok := n.(*ast.RangeStmt)
 		return ok && n.Key != nil && n.Value != nil && token.Token(inst.value) == n.Tok &&
 			m.matchNode(state, n.Key) && m.matchNode(state, n.Value) && m.matchNode(state, n.X) && m.matchNode(state, n.Body)
+	case opRangeClause:
+		n, ok := n.(*ast.RangeStmt)
+		return ok && m.matchNode(state, n.X)
 
 	case opForStmt:
 		n, ok := n.(*ast.ForStmt)
