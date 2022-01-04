@@ -440,6 +440,12 @@ func TestCompileWildcard(t *testing.T) {
 			` • Ident importFoo`,
 			` • SimpleArgList 0`,
 		},
+
+		`range ($_)`: {
+			`RangeClause`,
+			` • ParenExpr`,
+			` •  • Node`,
+		},
 	})
 
 	for i := range tests {

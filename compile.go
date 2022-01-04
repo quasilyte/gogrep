@@ -127,6 +127,8 @@ func (c *compiler) compileNode(n ast.Node) {
 		c.compileDeclSlice(n)
 	case ExprSlice:
 		c.compileExprSlice(n)
+	case *rangeClause:
+		c.compileRangeClause(n)
 	default:
 		panic(c.errorf(n, "compileNode: unexpected %T", n))
 	}
@@ -1125,6 +1127,11 @@ func (c *compiler) compileExprSlice(exprs ExprSlice) {
 		c.compileExpr(n)
 	}
 	c.emitInstOp(opEnd)
+}
+
+func (c *compiler) compileRangeClause(clause *rangeClause) {
+	c.emitInstOp(opRangeClause)
+	c.compileExpr(clause.X)
 }
 
 func pickOp(cond bool, ifTrue, ifFalse operation) operation {
