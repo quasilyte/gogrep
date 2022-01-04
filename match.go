@@ -63,6 +63,8 @@ func (m *matcher) MatchNode(state *MatcherState, n ast.Node, accept func(MatchDa
 		if n, ok := n.(*ast.File); ok {
 			m.walkDeclSlice(state, n.Decls, accept)
 		}
+	case opRangeClause:
+		m.matchRangeClause(state, n, accept)
 	default:
 		state.capture = state.capture[:0]
 		if m.matchNodeWithInst(state, inst, n) {
@@ -114,6 +116,7 @@ func (m *matcher) matchNamed(state *MatcherState, name string, n ast.Node) bool 
 		state.capture = append(state.capture, CapturedNode{Name: name, Node: n})
 		return true
 	}
+
 	return equalNodes(prev, n)
 }
 
@@ -433,9 +436,6 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 		n, ok := n.(*ast.RangeStmt)
 		return ok && n.Key != nil && n.Value != nil && token.Token(inst.value) == n.Tok &&
 			m.matchNode(state, n.Key) && m.matchNode(state, n.Value) && m.matchNode(state, n.X) && m.matchNode(state, n.Body)
-	case opRangeClause:
-		n, ok := n.(*ast.RangeStmt)
-		return ok && m.matchNode(state, n.X)
 
 	case opForStmt:
 		n, ok := n.(*ast.ForStmt)
@@ -725,6 +725,51 @@ func (m *matcher) matchNodeList(state *MatcherState, nodes NodeSlice, partial bo
 		return nil, -1
 	}
 	return nodes.slice(partialStart, partialEnd), partialEnd + 1
+}
+
+func (m *matcher) matchRangeClause(state *MatcherState, n ast.Node, accept func(MatchData)) {
+	rng, ok := n.(*ast.RangeStmt)
+	if !ok {
+		return
+	}
+	state.capture = state.capture[:0]
+	if !m.matchNode(state, rng.X) {
+		return
+	}
+
+	// Now the fun begins: there is no Range pos in RangeStmt, so we need
+	// to make our best guess to find it.
+	// See https://github.com/golang/go/issues/50429
+	//
+	// In gogrep we don't have []byte sources available, and
+	// it would be cumbersome to walk bytes manually to find the "range" keyword.
+	// What we can do is to hope that code is:
+	// 1. Properly gofmt-ed.
+	// 2. There are not some freefloating artifacts between TokPos and "range".
+	//
+	// We start from the end of the '=' or ':=' token.
+	from := rng.TokPos + 1
+	if rng.Tok == token.DEFINE {
+		from++ // ':=' is 1 byte longer that '='
+	}
+	// Now suppose we have 'for _, x := range xs {...}'
+	// If this is true, then `xs.Pos.Offset - len(" range ")` would
+	// lead us to the current 'from' value.
+	if int(rng.X.Pos())-len(" range ") == int(from) {
+		// This means that there is exactly one space between Tok and "range".
+		// There are some afwul cases where this might break, but let's
+		// not think about them too much.
+		from++
+	}
+
+	state.partial.X = rng
+	state.partial.from = from
+	state.partial.to = rng.X.End()
+
+	accept(MatchData{
+		Capture: state.capture,
+		Node:    &state.partial,
+	})
 }
 
 func findNamed(capture []CapturedNode, name string) (ast.Node, bool) {

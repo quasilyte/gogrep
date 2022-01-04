@@ -35,6 +35,16 @@ func (data MatchData) CapturedByName(name string) (ast.Node, bool) {
 	return findNamed(data.Capture, name)
 }
 
+type PartialNode struct {
+	X ast.Node
+
+	from token.Pos
+	to   token.Pos
+}
+
+func (p *PartialNode) Pos() token.Pos { return p.from }
+func (p *PartialNode) End() token.Pos { return p.to }
+
 type MatcherState struct {
 	Types *types.Info
 
@@ -43,6 +53,8 @@ type MatcherState struct {
 	capture []CapturedNode
 
 	pc int
+
+	partial PartialNode
 }
 
 func NewMatcherState() MatcherState {
