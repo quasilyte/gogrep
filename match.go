@@ -746,24 +746,32 @@ func (m *matcher) matchRangeClause(state *MatcherState, n ast.Node, accept func(
 	// What we can do is to hope that code is:
 	// 1. Properly gofmt-ed.
 	// 2. There are no some freefloating artifacts between TokPos and "range".
-	//
-	// We start from the end of the '=' or ':=' token.
-	from := rng.TokPos + 1
-	if rng.Tok == token.DEFINE {
-		from++ // ':=' is 1 byte longer that '='
-	}
-	// Now suppose we have 'for _, x := range xs {...}'
-	// If this is true, then `xs.Pos.Offset - len(" range ")` would
-	// lead us to the current 'from' value.
-	if int(rng.X.Pos())-len(" range ") == int(from) {
-		// This means that there is exactly one space between Tok and "range".
-		// There are some afwul cases where this might break, but let's
-		// not think about them too much.
-		from++
+	var from int
+	if rng.TokPos != token.NoPos {
+		// Start from the end of the '=' or ':=' token.
+		from = int(rng.TokPos + 1)
+		if rng.Tok == token.DEFINE {
+			from++ // ':=' is 1 byte longer that '='
+		}
+		// Now suppose we have 'for _, x := range xs {...}'
+		// If this is true, then `xs.Pos.Offset - len(" range ")` would
+		// lead us to the current 'from' value.
+		// It's syntactically correct to have `:=range`, so we don't
+		// unconditionally add a space here.
+		if int(rng.X.Pos())-len(" range ") == from {
+			// This means that there is exactly one space between Tok and "range".
+			// There are some afwul cases where this might break, but let's
+			// not think about them too much.
+			from += len(" ")
+		}
+	} else {
+		// `for range xs {...}` form.
+		// There should be at least 1 space between "for" and "range".
+		from = int(rng.For) + len("for ")
 	}
 
 	state.partial.X = rng
-	state.partial.from = from
+	state.partial.from = token.Pos(from)
 	state.partial.to = rng.X.End()
 
 	accept(MatchData{

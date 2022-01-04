@@ -30,6 +30,12 @@ func TestMatchCapture(t *testing.T) {
 			`package p; func _() { for i, x := range data[0] { println(i, x) } }`,
 			`x:data[0]`,
 		},
+
+		{
+			`range $x`,
+			`package p; func _() { for range data[0] {} }`,
+			`x:data[0]`,
+		},
 	}
 
 	for i := range tests {
