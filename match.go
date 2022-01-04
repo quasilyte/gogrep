@@ -65,6 +65,12 @@ func (m *matcher) MatchNode(state *MatcherState, n ast.Node, accept func(MatchDa
 		}
 	case opRangeClause:
 		m.matchRangeClause(state, n, accept)
+	case opRangeHeader:
+		m.matchRangeHeader(state, n, accept)
+	case opRangeKeyHeader:
+		m.matchRangeKeyHeader(state, inst, n, accept)
+	case opRangeKeyValueHeader:
+		m.matchRangeKeyValueHeader(state, inst, n, accept)
 	default:
 		state.capture = state.capture[:0]
 		if m.matchNodeWithInst(state, inst, n) {
@@ -778,6 +784,45 @@ func (m *matcher) matchRangeClause(state *MatcherState, n ast.Node, accept func(
 		Capture: state.capture,
 		Node:    &state.partial,
 	})
+}
+
+func (m *matcher) matchRangeHeader(state *MatcherState, n ast.Node, accept func(MatchData)) {
+	rng, ok := n.(*ast.RangeStmt)
+	if ok && rng.Key == nil && rng.Value == nil && m.matchNode(state, rng.X) {
+		m.setRangeHeaderPos(state, rng)
+		accept(MatchData{
+			Capture: state.capture,
+			Node:    &state.partial,
+		})
+	}
+}
+
+func (m *matcher) matchRangeKeyHeader(state *MatcherState, inst instruction, n ast.Node, accept func(MatchData)) {
+	rng, ok := n.(*ast.RangeStmt)
+	if ok && rng.Key != nil && rng.Value == nil && token.Token(inst.value) == rng.Tok && m.matchNode(state, rng.Key) && m.matchNode(state, rng.X) {
+		m.setRangeHeaderPos(state, rng)
+		accept(MatchData{
+			Capture: state.capture,
+			Node:    &state.partial,
+		})
+	}
+}
+
+func (m *matcher) matchRangeKeyValueHeader(state *MatcherState, inst instruction, n ast.Node, accept func(MatchData)) {
+	rng, ok := n.(*ast.RangeStmt)
+	if ok && rng.Key != nil && rng.Value != nil && token.Token(inst.value) == rng.Tok && m.matchNode(state, rng.Key) && m.matchNode(state, rng.Value) && m.matchNode(state, rng.X) {
+		m.setRangeHeaderPos(state, rng)
+		accept(MatchData{
+			Capture: state.capture,
+			Node:    &state.partial,
+		})
+	}
+}
+
+func (m *matcher) setRangeHeaderPos(state *MatcherState, rng *ast.RangeStmt) {
+	state.partial.X = rng
+	state.partial.from = rng.Pos()
+	state.partial.to = rng.Body.Pos() - 1
 }
 
 func findNamed(capture []CapturedNode, name string) (ast.Node, bool) {
