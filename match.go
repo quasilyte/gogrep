@@ -745,7 +745,7 @@ func (m *matcher) matchRangeClause(state *MatcherState, n ast.Node, accept func(
 	// it would be cumbersome to walk bytes manually to find the "range" keyword.
 	// What we can do is to hope that code is:
 	// 1. Properly gofmt-ed.
-	// 2. There are not some freefloating artifacts between TokPos and "range".
+	// 2. There are no some freefloating artifacts between TokPos and "range".
 	//
 	// We start from the end of the '=' or ':=' token.
 	from := rng.TokPos + 1
