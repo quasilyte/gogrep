@@ -37,6 +37,13 @@ func (m *matcher) ifaceValue(inst instruction) interface{} {
 	return m.prog.ifaces[inst.valueIndex]
 }
 
+func (m *matcher) resetCapture(state *MatcherState) {
+	state.capture = state.capture[:0]
+	if state.CapturePreset != nil {
+		state.capture = append(state.capture, state.CapturePreset...)
+	}
+}
+
 func (m *matcher) MatchNode(state *MatcherState, n ast.Node, accept func(MatchData)) {
 	state.pc = 0
 	inst := m.nextInst(state)
@@ -72,7 +79,7 @@ func (m *matcher) MatchNode(state *MatcherState, n ast.Node, accept func(MatchDa
 	case opRangeKeyValueHeader:
 		m.matchRangeKeyValueHeader(state, inst, n, accept)
 	default:
-		state.capture = state.capture[:0]
+		m.resetCapture(state)
 		if m.matchNodeWithInst(state, inst, n) {
 			accept(MatchData{
 				Capture: state.capture,
@@ -99,7 +106,7 @@ func (m *matcher) walkNodeSlice(state *MatcherState, nodes NodeSlice, accept fun
 	from := 0
 	for {
 		state.pc = 1 // FIXME: this is a kludge
-		state.capture = state.capture[:0]
+		m.resetCapture(state)
 		matched, offset := m.matchNodeList(state, nodes.slice(from, sliceLen), true)
 		if matched == nil {
 			break
@@ -738,7 +745,7 @@ func (m *matcher) matchRangeClause(state *MatcherState, n ast.Node, accept func(
 	if !ok {
 		return
 	}
-	state.capture = state.capture[:0]
+	m.resetCapture(state)
 	if !m.matchNode(state, rng.X) {
 		return
 	}
