@@ -13,6 +13,55 @@ import (
 
 // FIXME: find test case duplicates.
 
+func TestMatchPresetCapture(t *testing.T) {
+	type captureVars = map[string]string
+
+	tests := []struct {
+		pat        string
+		preset     map[string]string
+		numMatches int
+		input      string
+	}{
+		{`$x`, captureVars{"x": "10"}, 1, `10`},
+		{`$x`, captureVars{"x": "5"}, 0, `10`},
+		{`$x = $x`, captureVars{"x": "v"}, 1, `v = v`},
+		{`$x = $x`, captureVars{"x": "v"}, 0, `v = v2`},
+		{`$x = $x`, captureVars{"x": "v"}, 0, `y = y`},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+			state := NewMatcherState()
+			fset := token.NewFileSet()
+			config := CompileConfig{
+				Fset: fset,
+				Src:  test.pat,
+			}
+			for k, s := range test.preset {
+				n := testParseNode(t, fset, s)
+				state.CapturePreset = append(state.CapturePreset, CapturedNode{
+					Name: k,
+					Node: n,
+				})
+			}
+			pat, _, err := Compile(config)
+			if err != nil {
+				t.Fatalf("compile `%s`: %v", test.pat, err)
+			}
+			target := testParseNode(t, token.NewFileSet(), test.input)
+			matches := 0
+			testAllMatches(pat, &state, target, func(m MatchData) {
+				matches++
+			})
+			if matches != test.numMatches {
+				t.Fatalf("test `%s`:\ntarget: `%s`\nhave: %v\nwant: %v",
+					test.pat, test.input, matches, test.numMatches)
+			}
+		})
+	}
+}
+
 func TestMatchPos(t *testing.T) {
 	tests := []struct {
 		pat     string
