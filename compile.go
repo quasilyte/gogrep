@@ -467,25 +467,41 @@ func (c *compiler) compileExprMembers(list []ast.Expr) {
 }
 
 func (c *compiler) compileCallExpr(n *ast.CallExpr) {
-	canBeVariadic := func(n *ast.CallExpr) bool {
+	variadicOperation := func(n *ast.CallExpr) (operation, uint8) {
 		if len(n.Args) == 0 {
-			return false
+			return opNonVariadicCallExpr, 0
 		}
 		lastArg, ok := n.Args[len(n.Args)-1].(*ast.Ident)
 		if !ok {
-			return false
+			return opNonVariadicCallExpr, 0
 		}
-		return isWildName(lastArg.Name) && decodeWildName(lastArg.Name).Seq
+		if !isWildName(lastArg.Name) || !decodeWildName(lastArg.Name).Seq {
+			return opNonVariadicCallExpr, 0
+		}
+		if len(n.Args) == 1 {
+			return opCallExpr, 0
+		}
+		// If there is any seq op before the lastArg, we emit opCallExpr too.
+		for i := 0; i < len(n.Args)-1; i++ {
+			if decodeWildNode(n.Args[i]).Seq {
+				return opCallExpr, 0
+			}
+		}
+		return opMaybeVariadicCallExpr, c.toUint8(n, len(n.Args)-1)
 	}
 
-	op := opNonVariadicCallExpr
+	var value uint8
+	var op operation
 	if n.Ellipsis.IsValid() {
 		op = opVariadicCallExpr
-	} else if canBeVariadic(n) {
-		op = opCallExpr
+	} else {
+		op, value = variadicOperation(n)
 	}
 
-	c.emitInstOp(op)
+	c.prog.insts = append(c.prog.insts, instruction{
+		op:    op,
+		value: value,
+	})
 	c.compileSymbol(n.Fun)
 	c.compileExprMembers(n.Args)
 }

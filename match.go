@@ -232,6 +232,15 @@ func (m *matcher) matchNodeWithInst(state *MatcherState, inst instruction, n ast
 	case opNonVariadicCallExpr:
 		n, ok := n.(*ast.CallExpr)
 		return ok && !n.Ellipsis.IsValid() && m.matchNode(state, n.Fun) && m.matchArgList(state, n.Args)
+	case opMaybeVariadicCallExpr:
+		n, ok := n.(*ast.CallExpr)
+		if !ok {
+			return false
+		}
+		if n.Ellipsis.IsValid() && len(n.Args) <= int(inst.value) {
+			return false
+		}
+		return m.matchNode(state, n.Fun) && m.matchArgList(state, n.Args)
 	case opCallExpr:
 		n, ok := n.(*ast.CallExpr)
 		return ok && m.matchNode(state, n.Fun) && m.matchArgList(state, n.Args)

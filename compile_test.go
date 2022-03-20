@@ -331,10 +331,21 @@ func TestCompileWildcard(t *testing.T) {
 		},
 
 		`f(1, $*_)`: {
-			`CallExpr`,
+			`MaybeVariadicCallExpr 1`,
 			` • Ident f`,
 			` • ArgList`,
 			` •  • BasicLit 1`,
+			` •  • NodeSeq`,
+			` •  • End`,
+		},
+
+		`f(1, 2, 3, $*_)`: {
+			`MaybeVariadicCallExpr 3`,
+			` • Ident f`,
+			` • ArgList`,
+			` •  • BasicLit 1`,
+			` •  • BasicLit 2`,
+			` •  • BasicLit 3`,
 			` •  • NodeSeq`,
 			` •  • End`,
 		},
@@ -452,6 +463,15 @@ func TestCompileWildcard(t *testing.T) {
 			` • Node`,
 			` • NamedNode v`,
 			` • NamedNode xs`,
+		},
+
+		`f($_, $*_)`: {
+			`MaybeVariadicCallExpr 1`,
+			` • Ident f`,
+			` • ArgList`,
+			` •  • Node`,
+			` •  • NodeSeq`,
+			` •  • End`,
 		},
 	})
 

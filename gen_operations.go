@@ -92,6 +92,7 @@ var opPrototypes = []operationProto{
 
 	{name: "VariadicCallExpr", tag: "CallExpr", args: "fn args", example: "f(1, xs...)"},
 	{name: "NonVariadicCallExpr", tag: "CallExpr", args: "fn args", example: "f(1, xs)"},
+	{name: "MaybeVariadicCallExpr", tag: "CallExpr", args: "fn args", value: "int | can be variadic if len(args)>value", example: "f(1, xs) or f(1, xs...)"},
 	{name: "CallExpr", tag: "CallExpr", args: "fn args", example: "f(1, xs) or f(1, xs...)"},
 
 	{name: "AssignStmt", tag: "AssignStmt", args: "lhs rhs", value: "token.Token | ':=' or '='", example: "lhs := rhs()"},
