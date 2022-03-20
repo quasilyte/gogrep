@@ -432,6 +432,20 @@ func TestMatch(t *testing.T) {
 		{`fmt.Sprintf($_, $args)`, 0, `fmt.Sprintf(f, a...)`},
 		{`$fmt.$_($*_)`, 1, `fmt.Sprintf("%d", 1)`},
 
+		// OK: trailing $*_ can match variadic calls.
+		{`f($*_)`, 1, `f(xs...)`},
+		{`f($*_)`, 1, `f(1, xs...)`},
+		{`f($_, $*_)`, 1, `f(1, xs...)`},
+		{`f($_, $*_)`, 1, `f(1, 2, xs...)`},
+		{`f($_, $_, $*_)`, 1, `f(1, 2, xs...)`},
+		{`f($_, $_, $*_)`, 1, `f(1, 2, 3, xs...)`},
+		{`f($*_, $_, $*_)`, 1, `f(1)`},
+		// TODO: the case below should probably be rejected.
+		{`f($*_, $_, $*_)`, 1, `f(xs...)`},
+		// It doesn't allow to match a variadic call in the following cases.
+		{`f($_, $*_)`, 0, `f(xs...)`},
+		{`f($_, $_, $*_)`, 0, `f(1, xs...)`},
+
 		// Selector expr.
 		{`$x.Field`, 1, `a.Field`},
 		{`$x.Field`, 1, `b.Field`},
