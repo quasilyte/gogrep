@@ -6,6 +6,7 @@ import (
 	"go/token"
 
 	"github.com/quasilyte/gogrep/internal/stdinfo"
+	"golang.org/x/exp/typeparams"
 )
 
 type compileError string
@@ -211,7 +212,7 @@ func (c *compiler) compileField(n *ast.Field) {
 		}
 		c.emitInstOp(opEnd)
 	}
-	c.compileExpr(n.Type)
+	c.compileTypeExpr(n.Type)
 }
 
 func (c *compiler) compileValueSpec(spec *ast.ValueSpec) {
@@ -234,7 +235,7 @@ func (c *compiler) compileValueSpec(spec *ast.ValueSpec) {
 	}
 	c.emitInstOp(opEnd)
 	if spec.Type != nil {
-		c.compileOptExpr(spec.Type)
+		c.compileOptTypeExpr(spec.Type)
 	}
 	if len(spec.Values) != 0 {
 		for _, v := range spec.Values {
@@ -245,9 +246,26 @@ func (c *compiler) compileValueSpec(spec *ast.ValueSpec) {
 }
 
 func (c *compiler) compileTypeSpec(spec *ast.TypeSpec) {
+	// Generic types can't have aliases, so we use that fact here.
+	typeParams := typeparams.ForTypeSpec(spec)
+	if !spec.Assign.IsValid() && !isWildName(spec.Name.Name) && typeParams == nil {
+		c.emitInst(instruction{
+			op:         opSimpleTypeSpec,
+			valueIndex: c.internString(spec.Name, spec.Name.Name),
+		})
+		c.compileTypeExpr(spec.Type)
+		return
+	}
+	if typeParams != nil {
+		c.emitInstOp(opGenericTypeSpec)
+		c.compileIdent(spec.Name)
+		c.compileFieldList(typeParams)
+		c.compileTypeExpr(spec.Type)
+		return
+	}
 	c.emitInstOp(pickOp(spec.Assign.IsValid(), opTypeAliasSpec, opTypeSpec))
 	c.compileIdent(spec.Name)
-	c.compileExpr(spec.Type)
+	c.compileTypeExpr(spec.Type)
 }
 
 func (c *compiler) compileFile(n *ast.File) {
@@ -274,6 +292,16 @@ func (c *compiler) compileDecl(n ast.Decl) {
 
 func (c *compiler) compileFuncDecl(n *ast.FuncDecl) {
 	if n.Recv == nil {
+		if !isWildName(n.Name.Name) && typeparams.ForFuncType(n.Type) == nil && n.Body != nil {
+			// Generic functions can't live without body, so there is no generic proto decls.
+			c.emitInst(instruction{
+				op:         opSimpleFuncDecl,
+				valueIndex: c.internString(n.Name, n.Name.Name),
+			})
+			c.compileFuncType(n.Type)
+			c.compileBlockStmt(n.Body)
+			return
+		}
 		c.emitInstOp(pickOp(n.Body == nil, opFuncProtoDecl, opFuncDecl))
 	} else {
 		c.emitInstOp(pickOp(n.Body == nil, opMethodProtoDecl, opMethodDecl))
@@ -311,6 +339,22 @@ func (c *compiler) compileGenDecl(n *ast.GenDecl) {
 	default:
 		panic(c.errorf(n, "unexpected gen decl"))
 	}
+}
+
+func (c *compiler) compileTypeExpr(n ast.Expr) {
+	if ident, ok := n.(*ast.Ident); ok && ident.Name == "any" && !c.config.Strict && typeparams.Enabled() {
+		c.emitInstOp(opEfaceType)
+		return
+	}
+	c.compileExpr(n)
+}
+
+func (c *compiler) compileOptTypeExpr(n ast.Expr) {
+	if ident, ok := n.(*ast.Ident); ok && isWildName(ident.Name) {
+		c.compileWildIdent(ident, true)
+		return
+	}
+	c.compileTypeExpr(n)
 }
 
 func (c *compiler) compileExpr(n ast.Expr) {
@@ -608,16 +652,32 @@ func (c *compiler) compileStructType(n *ast.StructType) {
 }
 
 func (c *compiler) compileInterfaceType(n *ast.InterfaceType) {
+	if len(n.Methods.List) == 0 && !c.config.Strict {
+		c.emitInstOp(opEfaceType)
+		return
+	}
 	c.emitInstOp(opInterfaceType)
 	c.compileOptFieldList(n.Methods)
 }
 
 func (c *compiler) compileFuncType(n *ast.FuncType) {
 	void := n.Results == nil || len(n.Results.List) == 0
+	typeParams := typeparams.ForFuncType(n)
 	if void {
-		c.emitInstOp(opVoidFuncType)
+		if typeParams == nil {
+			c.emitInstOp(opVoidFuncType)
+		} else {
+			c.emitInstOp(opGenericVoidFuncType)
+		}
 	} else {
-		c.emitInstOp(opFuncType)
+		if typeParams == nil {
+			c.emitInstOp(opFuncType)
+		} else {
+			c.emitInstOp(opGenericFuncType)
+		}
+	}
+	if typeParams != nil {
+		c.compileOptFieldList(typeParams)
 	}
 	c.compileOptFieldList(n.Params)
 	if !void {
@@ -628,18 +688,18 @@ func (c *compiler) compileFuncType(n *ast.FuncType) {
 func (c *compiler) compileArrayType(n *ast.ArrayType) {
 	if n.Len == nil {
 		c.emitInstOp(opSliceType)
-		c.compileExpr(n.Elt)
+		c.compileTypeExpr(n.Elt)
 	} else {
 		c.emitInstOp(opArrayType)
 		c.compileExpr(n.Len)
-		c.compileExpr(n.Elt)
+		c.compileTypeExpr(n.Elt)
 	}
 }
 
 func (c *compiler) compileMapType(n *ast.MapType) {
 	c.emitInstOp(opMapType)
-	c.compileExpr(n.Key)
-	c.compileExpr(n.Value)
+	c.compileTypeExpr(n.Key)
+	c.compileTypeExpr(n.Value)
 }
 
 func (c *compiler) compileChanType(n *ast.ChanType) {
@@ -647,7 +707,7 @@ func (c *compiler) compileChanType(n *ast.ChanType) {
 		op:    opChanType,
 		value: c.toUint8(n, int(n.Dir)),
 	})
-	c.compileExpr(n.Value)
+	c.compileTypeExpr(n.Value)
 }
 
 func (c *compiler) compileCompositeLit(n *ast.CompositeLit) {
@@ -655,7 +715,7 @@ func (c *compiler) compileCompositeLit(n *ast.CompositeLit) {
 		c.emitInstOp(opCompositeLit)
 	} else {
 		c.emitInstOp(opTypedCompositeLit)
-		c.compileExpr(n.Type)
+		c.compileTypeExpr(n.Type)
 	}
 	for _, elt := range n.Elts {
 		c.compileExpr(elt)
@@ -703,7 +763,7 @@ func (c *compiler) compileTypeAssertExpr(n *ast.TypeAssertExpr) {
 	if n.Type != nil {
 		c.emitInstOp(opTypeAssertExpr)
 		c.compileExpr(n.X)
-		c.compileExpr(n.Type)
+		c.compileTypeExpr(n.Type)
 	} else {
 		c.emitInstOp(opTypeSwitchAssertExpr)
 		c.compileExpr(n.X)

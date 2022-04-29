@@ -60,9 +60,12 @@ var opPrototypes = []operationProto{
 	{name: "TypeSwitchAssertExpr", tag: "TypeAssertExpr", args: "x"},
 
 	{name: "StructType", tag: "StructType", args: "fields"},
-	{name: "InterfaceType", tag: "StructType", args: "fields"},
+	{name: "InterfaceType", tag: "InterfaceType", args: "fields"},
+	{name: "EfaceType", tag: "InterfaceType"},
 	{name: "VoidFuncType", tag: "FuncType", args: "params"},
+	{name: "GenericVoidFuncType", tag: "FuncType", args: "typeparams params"},
 	{name: "FuncType", tag: "FuncType", args: "params results"},
+	{name: "GenericFuncType", tag: "FuncType", args: "typeparams params results"},
 	{name: "ArrayType", tag: "ArrayType", args: "length elem"},
 	{name: "SliceType", tag: "ArrayType", args: "elem"},
 	{name: "MapType", tag: "MapType", args: "key value"},
@@ -168,9 +171,12 @@ var opPrototypes = []operationProto{
 	{name: "TypedValueInitSpec", tag: "ValueSpec", args: "lhs... type rhs...", example: "lhs typ = rhs"},
 	{name: "TypedValueSpec", tag: "ValueSpec", args: "lhs... type", example: "lhs typ"},
 
+	{name: "SimpleTypeSpec", tag: "TypeSpec", args: "type", valueIndex: "strings | type name", example: "name type"},
 	{name: "TypeSpec", tag: "TypeSpec", args: "name type", example: "name type"},
+	{name: "GenericTypeSpec", tag: "TypeSpec", args: "name typeparasm type", example: "name[typeparams] type"},
 	{name: "TypeAliasSpec", tag: "TypeSpec", args: "name type", example: "name = type"},
 
+	{name: "SimpleFuncDecl", tag: "FuncDecl", args: "type block", valueIndex: "strings | field name"},
 	{name: "FuncDecl", tag: "FuncDecl", args: "name type block"},
 	{name: "MethodDecl", tag: "FuncDecl", args: "recv name type block"},
 	{name: "FuncProtoDecl", tag: "FuncDecl", args: "name type"},

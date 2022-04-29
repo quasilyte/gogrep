@@ -33,7 +33,7 @@ func FuzzPatternParsing(f *testing.F) {
 				t.Fatalf("panic during compiling %q", s)
 			}
 		}()
-		Compile(CompileConfig{
+		_, _, _ = Compile(CompileConfig{
 			Fset: token.NewFileSet(),
 			Src:  s,
 		})
