@@ -9,6 +9,8 @@ import (
 	"go/types"
 	"strings"
 	"testing"
+
+	"golang.org/x/exp/typeparams"
 )
 
 // FIXME: find test case duplicates.
@@ -305,11 +307,13 @@ func TestMatch(t *testing.T) {
 		return s
 	}
 
-	tests := []struct {
+	type testCase struct {
 		pat        string
 		numMatches int
 		input      string
-	}{
+	}
+
+	tests := []testCase{
 		{`123`, 1, `123`},
 		{`123`, 0, `12`},
 		{`2.71828i`, 1, `2.71828i`},
@@ -1260,6 +1264,59 @@ func TestMatch(t *testing.T) {
 		{`import $_`, 1, `package foo; import ("fmt")`},
 		{`import $a`, 1, `package foo; import "fmt"`},
 		{`import $a`, 1, `package foo; import ("fmt")`},
+	}
+
+	if typeparams.Enabled() {
+		tests = append(tests, []testCase{
+			// interface{} == any in all contexts.
+			// Unless strict mode is
+			{`[]any{}`, 1, `[]interface{}{}`},
+			{`[]interface{}{}`, 1, `[]any{}`},
+			{strict(`[]any{}`), 0, `[]interface{}{}`},
+			{strict(`[]any{}`), 1, `[]any{}`},
+			{strict(`[]interface{}{}`), 0, `[]any{}`},
+			{strict(`[]interface{}{}`), 1, `[]interface{}{}`},
+			{`var $_ any`, 1, `var x interface{}`},
+			{`var $_ any`, 1, `var x any`},
+			{`var $_ any`, 0, `var x int`},
+
+			// Generic func decl.
+			{`func f() {}`, 0, `package p; func f[T any]() {}`},
+			{`func $_() {}`, 1, `package p; func f[T any]() {}`},
+			{`func $_[$_ $_]() {}`, 1, `package p; func f[T any]() {}`},
+			{`func $_[$_, $_ $_]() {}`, 1, `package p; func f[T1, T2 any]() {}`},
+			{`func $_[$_ $_]() {}`, 0, `package p; func f[T1, T2 any]() {}`},
+			{`func $_[$_ any]() {}`, 1, `package p; func f[T1 interface{}]() {}`},
+			// TODO: $*_ for type params in declarations
+			// {`func $_[$*_]($*_) { $*_ }`, 1, `package p func f[T any]() {}`},
+			// {`func $_[$*_]($*_) { $*_ }`, 0, `package p func f() {}`},
+			// {`func $_[$*_]() {}`, 1, `package p; func f[T any]() {}`},
+			// {`func $_[$*_]() {}`, 1, `package p; func f[T any, T2 any]() {}`},
+
+			// Generic type decl.
+			{`type Foo[T any] struct { x T }`, 1, `package p; type Foo[T any] struct { x T }`},
+			{`type Foo[T any] struct { x T }`, 0, `package p; type Foo struct { x T }`},
+			{`type Foo struct { x T }`, 0, `package p; type Foo[T any] struct { x T }`},
+
+			// Generic literals.
+			{`Foo{1}`, 0, `Foo[int]{1}`},
+			{`Foo[int]{1}`, 0, `Foo{1}`},
+			{`$_{1}`, 1, `Foo[int]{1}`},
+			{`$_[$t]{X: 1}`, 1, `Foo[int]{X: 1}`},
+			{`$_[$t]{X: 1}`, 0, `Foo{X: 1}`},
+			{`$_[$t]{X: 1}`, 0, `Foo[int, int]{X: 1}`},
+			// TODO: $*_ for index expressions in generic contexts?
+
+			// Generic calls.
+			{`f(10)`, 0, `f[int](10)`},
+			{`f[int](10)`, 0, `f(10)`},
+			{`$_($*_)`, 1, `f[int](10)`},
+			{`$_($*_)`, 1, `f[int](10, 20)`},
+			{`$_($*_)`, 1, `f[int, float](10, 20)`},
+			{`$_[$t]($*_)`, 1, `f[int](10)`},
+			{`$_[$t]($*_)`, 0, `f(10)`},
+			{`$_[$t]($*_)`, 0, `f(10, 20)`},
+		}...)
 	}
 
 	for i := range tests {

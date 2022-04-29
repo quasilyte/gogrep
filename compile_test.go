@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/exp/typeparams"
 )
 
 type compileTest struct {
@@ -314,8 +315,7 @@ func TestCompileWildcard(t *testing.T) {
 		},
 
 		`func _($*_) {}`: {
-			`FuncDecl`,
-			` • Ident _`,
+			`SimpleFuncDecl _`,
 			` • VoidFuncType`,
 			` •  • OptNode`,
 			` • BlockStmt`,
@@ -475,6 +475,25 @@ func TestCompileWildcard(t *testing.T) {
 		},
 	})
 
+	if typeparams.Enabled() {
+		tests = append(tests, compileTestsFromMap(map[string][]string{
+			`func $_[$_ $_]() {}`: {
+				`FuncDecl`,
+				` • Node`,
+				` • GenericVoidFuncType`,
+				` •  • FieldList`,
+				` •  •  • Field`,
+				` •  •  •  • Node`,
+				` •  •  •  • Node`,
+				` •  •  • End`,
+				` •  • FieldList`,
+				` •  •  • End`,
+				` • BlockStmt`,
+				` •  • End`,
+			},
+		})...)
+	}
+
 	for i := range tests {
 		runCompileTest(t, i, tests[i], false)
 	}
@@ -505,6 +524,22 @@ func TestCompileWithTypes(t *testing.T) {
 			` • Ident p`,
 		},
 
+		`[]interface{}{}`: {
+			`TypedCompositeLit`,
+			` • SliceType`,
+			` •  • EfaceType`,
+			` • End`,
+		},
+
+		`var x interface{}`: {
+			`VarDecl`,
+			` • TypedValueSpec`,
+			` •  • Ident x`,
+			` •  • End`,
+			` •  • EfaceType`,
+			` • End`,
+		},
+
 		`var ()`: {
 			`VarDecl`,
 			` • End`,
@@ -518,11 +553,9 @@ func TestCompileWithTypes(t *testing.T) {
 		},
 		`type (a int64; b string)`: {
 			`TypeDecl`,
-			` • TypeSpec`,
-			` •  • Ident a`,
+			` • SimpleTypeSpec a`,
 			` •  • Ident int64`,
-			` • TypeSpec`,
-			` •  • Ident b`,
+			` • SimpleTypeSpec b`,
 			` •  • Ident string`,
 			` • End`,
 		},
@@ -1138,6 +1171,40 @@ func TestCompileWithTypes(t *testing.T) {
 			` • End`,
 		},
 	})
+
+	if typeparams.Enabled() {
+		tests = append(tests, compileTestsFromMap(map[string][]string{
+			`var x any`: {
+				`VarDecl`,
+				` • TypedValueSpec`,
+				` •  • Ident x`,
+				` •  • End`,
+				` •  • EfaceType`,
+				` • End`,
+			},
+
+			`[]any{}`: {
+				`TypedCompositeLit`,
+				` • SliceType`,
+				` •  • EfaceType`,
+				` • End`,
+			},
+
+			`type Foo[T any] struct{}`: {
+				`TypeDecl`,
+				` • GenericTypeSpec`,
+				` •  • Ident Foo`,
+				` •  • FieldList`,
+				` •  •  • SimpleField T`,
+				` •  •  •  • EfaceType`,
+				` •  •  • End`,
+				` •  • StructType`,
+				` •  •  • FieldList`,
+				` •  •  •  • End`,
+				` • End`,
+			},
+		})...)
+	}
 
 	for i := range tests {
 		runCompileTest(t, i, tests[i], true)
