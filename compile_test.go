@@ -675,6 +675,14 @@ func TestCompileWithTypes(t *testing.T) {
 			` • BasicLit 0`,
 		},
 
+		`x[int, uint]`: {
+			`IndexListExpr`,
+			` • Ident x`,
+			` • Ident int`,
+			` • Ident uint`,
+			` • End`,
+		},
+
 		`s[:]`: {
 			`SliceExpr`,
 			` • Ident s`,
