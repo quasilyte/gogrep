@@ -157,6 +157,11 @@ func BenchmarkMatch(b *testing.B) {
 			pat:   `f($x, $*ys)`,
 			input: `f(1, 2, 3, 4, 5, 6)`,
 		},
+		{
+			name:  `exprList`,
+			pat:   `g(f($*_, $x, $x), $*_, 0)`,
+			input: `g(f(1, 2, 3, 4, 5, 6, 6), -1, -1, 0)`,
+		},
 	}
 
 	for i := range tests {
