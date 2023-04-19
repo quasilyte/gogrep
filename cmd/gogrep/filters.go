@@ -146,6 +146,9 @@ func applyEqFilter(ctx filterContext, f *filters.Expr, n ast.Node) bool {
 	x := f.Args[0]
 	y := f.Args[1]
 	if x.Op == opVarText {
+		if y.Op == opVarText {
+			return string(ctx.NodeText(x.Str)) == string(ctx.NodeText(y.Str))
+		}
 		if y.Op == filters.OpString {
 			return string(ctx.NodeText(x.Str)) == y.Str
 		}
